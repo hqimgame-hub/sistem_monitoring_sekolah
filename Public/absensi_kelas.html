@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Absensi Siswa - Scan QR</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script type="module" src="https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js"></script>
+  <script type="module" src="https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js"></script>
+  <script type="module" src="https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+  <script type="module" src="js/absensi_kelas.js"></script>
+</head>
+<body class="bg-gray-100 flex flex-col items-center justify-center min-h-screen p-4 pb-24">
+
+  <div class="w-full max-w-sm mx-auto mb-6">
+    <h1 class="text-xl font-bold mb-2 text-center text-gray-700">📷 Scan QR Kartu Siswa</h1>
+    <p class="text-sm text-gray-500 mb-2 text-center">Arahkan kamera ke QR Code untuk mencatat kehadiran</p>
+    
+    <div class="flex justify-between items-center bg-white p-2 rounded-lg shadow-sm border border-blue-200">
+        <p id="petugasLabel" class="text-xs text-blue-600 font-medium">Memuat Petugas...</p>
+        <button id="btnLogout" class="bg-red-500 text-white px-2 py-0.5 rounded hover:bg-red-600 text-xs hidden">Logout</button>
+    </div>
+  </div>
+<div class="flex flex-col items-center mb-2 text-sm text-gray-600">
+  <span id="serverClock" class="font-mono">🕒 Waktu Server: Memuat...</span>
+</div>
+  <div id="videoContainer" class="relative rounded-lg overflow-hidden border border-gray-300 w-full max-w-sm mx-auto shadow-md">
+    <video id="kamera" class="w-full max-h-[320px] object-cover" autoplay playsinline></video>
+    <canvas id="kanvas" hidden></canvas>
+    <div class="absolute inset-0 border-4 border-green-500 rounded-lg pointer-events-none"></div>
+  </div>
+
+  <div id="hasil" class="mt-6 text-center text-gray-700 p-3 bg-white rounded-lg shadow w-full max-w-sm mx-auto">
+    Menunggu scan...
+  </div>
+  
+  <div id="loadingOverlay" class="hidden fixed inset-0 bg-gray-900 bg-opacity-60 flex items-center justify-center text-white text-lg z-50">
+    <div class="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500 mr-3"></div>
+    Memproses...
+  </div>
+
+</body>
+</html>

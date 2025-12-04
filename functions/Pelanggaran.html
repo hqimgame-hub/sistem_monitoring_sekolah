@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>⚠️ Data Pelanggaran Siswa</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+</head>
+
+<body class="bg-gray-100 text-gray-800 min-h-screen">
+  <!-- HEADER -->
+  <header class="bg-red-600 text-white py-4 shadow-md">
+    <div class="max-w-6xl mx-auto flex justify-between items-center px-4">
+      <h1 class="text-xl font-bold">⚠️ Data Pelanggaran Siswa</h1>
+      <button id="btnKembali" class="bg-gray-200 text-red-700 px-4 py-1 rounded hover:bg-gray-300">⬅️ Kembali</button>
+    </div>
+  </header>
+
+  <!-- MAIN -->
+  <main class="max-w-6xl mx-auto py-8 px-4 space-y-6">
+
+    <!-- FORM INPUT -->
+    <section class="bg-white p-6 rounded-lg shadow">
+      <h2 class="text-lg font-bold mb-4">📝 Tambah Pelanggaran</h2>
+      <form id="formPelanggaran" class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium">Nama Siswa</label>
+          <select id="namaSiswa" class="border rounded w-full p-2"></select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium">Kelas</label>
+          <input type="text" id="kelasSiswa" readonly class="border rounded w-full p-2 bg-gray-100" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium">Jenis Pelanggaran</label>
+          <select id="jenisPelanggaran" class="border rounded w-full p-2"></select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium">Poin</label>
+          <input type="number" id="poin" readonly class="border rounded w-full p-2 bg-gray-100" />
+        </div>
+        <div class="col-span-2">
+          <label class="block text-sm font-medium">Keterangan</label>
+          <textarea id="keterangan" class="border rounded w-full p-2"></textarea>
+        </div>
+        <div class="col-span-2">
+          <button type="submit" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded">➕ Simpan Pelanggaran</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- FILTER -->
+    <section class="bg-white p-4 rounded-lg shadow flex items-center space-x-4">
+      <input id="filterKelas" placeholder="Filter Kelas..." class="border rounded p-2 flex-1">
+      <input id="filterSiswa" placeholder="Cari Nama Siswa..." class="border rounded p-2 flex-1">
+      <button id="btnExportExcel" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">📥 Export Excel</button>
+    </section>
+
+    <!-- TABEL -->
+    <section class="bg-white p-6 rounded-lg shadow">
+      <h2 class="text-lg font-bold mb-3">📋 Daftar Pelanggaran</h2>
+      <div class="overflow-x-auto">
+        <table class="min-w-full text-sm text-center">
+          <thead class="bg-red-600 text-white">
+            <tr>
+              <th class="p-2">Tanggal</th>
+              <th class="p-2">Nama Siswa</th>
+              <th class="p-2">Kelas</th>
+              <th class="p-2">Jenis</th>
+              <th class="p-2">Poin</th>
+              <th class="p-2">Guru Pelapor</th>
+              <th class="p-2">Keterangan</th>
+            </tr>
+          </thead>
+          <tbody id="tablePelanggaran" class="bg-gray-50"></tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <script type="module" src="./js/pelanggaran.js"></script>
+</body>
+</html>

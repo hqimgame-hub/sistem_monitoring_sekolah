@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dashboard Guru</title>
+
+  <!-- Bootstrap -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- Icon -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+
+  <!-- XLSX -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  
+  <style>
+    body {
+      background-color: #f8f9fa;
+      font-family: "Segoe UI", sans-serif;
+    }
+    .sidebar {
+      min-height: 100vh;
+      background-color: #ffffff;
+      border-right: 1px solid #dee2e6;
+    }
+    .sidebar .nav-link {
+      color: #495057;
+      border-radius: 8px;
+      margin: 2px 0;
+    }
+    .sidebar .nav-link.active {
+      background-color: #0d6efd;
+      color: white;
+    }
+    .content {
+      padding: 20px;
+    }
+    .navbar-brand img {
+      height: 36px;
+      margin-right: 10px;
+    }
+    .table-responsive {
+      max-height: 70vh;
+      overflow-y: auto;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg bg-white shadow-sm sticky-top">
+    <div class="container-fluid">
+      <button class="btn btn-outline-primary me-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebar" aria-controls="sidebar">
+        <i class="bi bi-list"></i>
+      </button>
+      <a class="navbar-brand d-flex align-items-center" href="#">
+        <img src="assets/logo.png" alt="Logo Sekolah">
+        <span class="fw-semibold">Dashboard Guru</span>
+      </a>
+      <div class="ms-auto d-flex align-items-center">
+        <span id="userName" class="me-3 text-secondary small"></span>
+        <button id="logoutBtn" class="btn btn-outline-danger btn-sm"><i class="bi bi-box-arrow-right"></i> Logout</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Sidebar (Offcanvas) -->
+  <div class="offcanvas offcanvas-start sidebar" tabindex="-1" id="sidebar">
+    <div class="offcanvas-header">
+      <h5 class="offcanvas-title">Menu</h5>
+      <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+    </div>
+    <div class="offcanvas-body">
+      <nav class="nav flex-column">
+        <a class="nav-link active" id="menuIsi" href="#">📝 Isi Jurnal</a>
+        <a class="nav-link" id="menuDaftar" href="#">📚 Daftar Jurnal</a>
+        <a class="nav-link" id="menuInputNilai" href="#">📘 Nilai Per Bab</a>
+        <a class="nav-link" id="menuNilaiSemester" href="#">📑 Nilai Semester/Tahun</a>
+        <a class="nav-link" id="menuRekapNilai" href="#">📊 Rekap Nilai</a>
+        <a class="nav-link" id="menuCatatan" href="#">📒 Catatan Kelas</a>
+        <a class="nav-link" id="menuPelanggaran" href="#">🚫 Catatan Pelanggaran</a>
+      </nav>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="content container-fluid mt-3">
+    <!-- Section Isi Jurnal -->
+    <section id="sectionIsi" class="active">
+  <div class="card shadow-sm">
+    <div class="card-header bg-primary text-white">Isi Jurnal Mengajar</div>
+    <div class="card-body">
+      <form id="formJurnal">
+        <input type="hidden" id="editId">
+        <div class="row g-3">
+          <!-- 📅 Tanggal -->
+          <div class="col-md-3">
+            <label>Tanggal</label>
+            <input type="date" class="form-control" id="tanggal" required>
+          </div>
+
+          <!-- 🏫 Kelas -->
+          <div class="col-md-3">
+            <label>Kelas</label>
+            <select class="form-select" id="kelas" required></select>
+          </div>
+
+          <!-- 📚 Mata Pelajaran -->
+          <div class="col-md-3">
+            <label>Mata Pelajaran</label>
+            <select id="mapel" class="form-control" required>
+              <option value="">-- Pilih Mata Pelajaran --</option>
+            </select>
+          </div>
+
+          <!-- ⏰ Jam Ke -->
+          <div class="col-md-3">
+            <label>Jam Ke-</label>
+            <div id="jamKeContainer" class="d-flex flex-wrap gap-2">
+              <label><input type="checkbox" name="jamKe" value="1"> 1</label>
+              <label><input type="checkbox" name="jamKe" value="2"> 2</label>
+              <label><input type="checkbox" name="jamKe" value="3"> 3</label>
+              <label><input type="checkbox" name="jamKe" value="4"> 4</label>
+              <label><input type="checkbox" name="jamKe" value="5"> 5</label>
+              <label><input type="checkbox" name="jamKe" value="6"> 6</label>
+              <label><input type="checkbox" name="jamKe" value="7"> 7</label>
+              <label><input type="checkbox" name="jamKe" value="8"> 8</label>
+              <label><input type="checkbox" name="jamKe" value="9"> 9</label>
+            </div>
+          </div>
+
+          <!-- 🚫 Siswa Tidak Masuk -->
+          <div class="col-md-12">
+            <label>Siswa Tidak Masuk</label>
+            <input type="text" class="form-control" id="siswaTidakMasuk" placeholder="-">
+          </div>
+
+          <!-- 📋 Kegiatan Pembelajaran (dipindah ke sini dan dibuat full width) -->
+          <div class="col-12">
+            <label>Kegiatan Pembelajaran</label>
+            <textarea class="form-control" id="kegiatan" rows="3" required></textarea>
+          </div>
+
+          <!-- 🧭 Tindak Lanjut -->
+          <div class="col-md-12">
+            <label>Tindak Lanjut</label>
+            <textarea class="form-control" id="tindakLanjut" rows="2"></textarea>
+          </div>
+        </div>
+
+        <!-- 💾 Tombol Simpan -->
+        <div class="mt-3 text-end">
+          <button type="submit" class="btn btn-primary">Simpan Jurnal</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</section>
+
+
+    <!-- Section Daftar Jurnal -->
+    <section id="sectionDaftar" class="d-none">
+      <div class="card shadow-sm">
+        <div class="card-header bg-primary d-flex text-white justify-content-between align-items-center">
+          <span>Daftar Jurnal Mengajar</span>
+          <div>
+            <button class="btn btn-success btn-sm" id="exportJurnalExcel">📗 Export Excel</button>
+            <button class="btn btn-danger btn-sm" id="exportJurnalPDF">📕 Export PDF</button>
+          </div>
+        </div>
+        <div class="card-body table-responsive">
+          <table class="table table-striped table-hover" id="tabelJurnal">
+            <thead class="table-light">
+  <tr>
+    <th>Tanggal</th>
+    <th>Kelas</th>
+    <th>Mapel</th>
+    <th>Jam Ke-</th> 
+    <th>Kegiatan</th>
+    <th>Tindak Lanjut</th>
+    <th>Siswa Tidak Masuk</th>
+    <th>Aksi</th>
+  </tr>
+</thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section Nilai Per Bab -->
+    <section id="sectionInputNilai" class="d-none">
+      <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">Input Nilai Per Bab</div>
+        <div class="card-body">
+          <div class="row g-2">
+            <div class="col-md-3"><select class="form-select" id="kelasInputSelect"></select></div>
+            <div class="col-md-3">
+  <select class="form-select" id="mapelInputSelect">
+    <option value="">-- Pilih Mata Pelajaran --</option>
+  </select>
+</div>
+            <div class="col-md-3">
+              <select class="form-select" id="babSelect">
+                <option value="">-- Pilih Bab --</option>
+                <option value="Bab 1">Bab 1</option>
+                <option value="Bab 2">Bab 2</option>
+                <option value="Bab 3">Bab 3</option>
+                <option value="Bab 4">Bab 4</option>
+                <option value="Bab 5">Bab 5</option>
+                <option value="Bab 6">Bab 6</option>
+                <option value="Bab 7">Bab 7</option>
+                <option value="Bab 8">Bab 8</option>
+                <option value="Bab 9">Bab 9</option>
+                <option value="Bab 10">Bab 10</option>
+                <option value="Bab 11">Bab 11</option>
+                <option value="Bab 12">Bab 12</option>
+              </select>
+            </div>
+            <div class="col-md-3"><button class="btn btn-primary w-100" id="btnMuatSiswa">Muat Siswa</button></div>
+          </div>
+
+          <div id="formNilaiContainer" class="mt-3 d-none">
+            <form id="formNilaiSiswa">
+              <div class="table-responsive">
+                <table class="table table-bordered table-striped" id="tabelInputNilai">
+                  <thead class="table-light">
+                    <tr><th>Nama Siswa</th><th>Tugas 1</th><th>Tugas 2</th><th>Tugas 3</th><th>UH</th></tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+              <div class="text-end"><button type="submit" class="btn btn-success">Simpan Nilai</button></div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section Nilai Semester / Tahun -->
+    <section id="sectionNilaiSemester" class="d-none">
+      <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">Input Nilai SAS & SAT</div>
+        <div class="card-body">
+          <div class="row g-2">
+            <div class="col-md-3"><select class="form-select" id="kelasSemesterSelect"></select></div>
+            <div class="col-md-3">
+            <select class="form-select" id="mapelInputSAS">
+  <option value="">-- Pilih Mata Pelajaran --</option>
+</select>
+</div>            
+            <div class="col-md-3"><button class="btn btn-primary w-100" id="btnMuatSiswaSemester">Muat Siswa</button></div>
+          </div>
+
+          <div id="formSemesterContainer" class="mt-3 d-none">
+            <form id="formNilaiSemester">
+              <div class="table-responsive">
+                <table class="table table-striped" id="tabelInputNilaiSemester">
+                <thead class="table-light">
+  <tr>
+    <th>Nama Siswa</th>
+    <th>Nilai SAS</th>
+    <th>Nilai SAT</th>
+  </tr>
+</thead>
+<tbody></tbody>
+                </table>
+              </div>
+              <div class="text-end"><button type="submit" class="btn btn-success">Simpan Nilai</button></div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section Rekap Nilai -->
+    <section id="sectionRekapNilai" class="d-none">
+      <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">Rekap Nilai</div>
+        <div class="card-body">
+          <div class="row g-2 mb-2">
+            <div class="col-md-3"><select class="form-select" id="filterKelasNilai"></select></div>
+            <div class="col-md-3">
+  <select class="form-select" id="filterMapelNilai">
+    <option value="">-- Semua Mapel --</option>
+  </select>
+</div>
+            <div class="col-md-3">
+              <select class="form-select" id="filterBabNilai">
+                <option value="">Semua Bab</option>
+                <option value="Bab 1">Bab 1</option><option value="Bab 2">Bab 2</option><option value="Bab 3">Bab 3</option><option value="Bab 4">Bab 4</option><option value="Bab 5">Bab 5</option><option value="Bab 6">Bab 6</option><option value="Bab 7">Bab 7</option><option value="Bab 8">Bab 8</option><option value="Bab 9">Bab 9</option><option value="Bab 10">Bab 10</option><option value="Bab 11">Bab 11</option><option value="Bab 12">Bab 12</option>
+              </select>
+            </div>
+            <div class="col-md-3"><button class="btn btn-primary w-100" id="btnFilterNilai">Tampilkan</button></div>
+          </div>
+          <div class="table-responsive">
+            <table class="table table-striped" id="tabelRekapNilai">
+              <thead class="table-light"><tr><th>Nama Siswa</th><th>Mapel</th><th>Bab/Jenis</th><th>Tugas1</th><th>Tugas2</th><th>Tugas3</th><th>UH</th><th>Nilai SAS/SAT</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section Catatan Kelas -->
+<section id="sectionCatatan" class="d-none">
+  <div class="card shadow-sm">
+    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+      <span>Catatan Kelas</span>
+      <div>
+        <button class="btn btn-success btn-sm me-2" id="exportCatatanExcel">📗 Export Excel</button>
+        <button class="btn btn-danger btn-sm" id="exportCatatanPDF">📕 Export PDF</button>
+      </div>
+    </div>
+    <div class="card-body">
+      <!-- Form Input -->
+      <form id="formCatatanKelas">
+        <input type="hidden" id="editIdCatatan">
+        <div class="row g-3">
+          <div class="col-md-3">
+            <label class="form-label">Tanggal</label>
+            <input type="date" class="form-control" id="tanggalKelas" required>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Kelas</label>
+            <select class="form-select" id="kelasKelas" required></select>
+          </div>
+        </div>
+        <div class="mt-3">
+          <label class="form-label">Catatan Umum</label>
+          <textarea class="form-control" id="catatanKelas" rows="3" placeholder="Tuliskan kondisi kelas hari ini..." required></textarea>
+        </div>
+        <div class="mt-3">
+          <label class="form-label">Tindak Lanjut / Rencana</label>
+          <textarea class="form-control" id="tindakLanjutKelas" rows="2" placeholder="Misal: Penguatan materi, diskusi tambahan, dll."></textarea>
+        </div>
+        <div class="text-end mt-3">
+          <button type="submit" class="btn btn-success">💾 Simpan</button>
+        </div>
+      </form>
+
+      <hr>
+
+      <!-- Filter -->
+      <div class="row g-2 mb-3">
+        <div class="col-md-3">
+          <select class="form-select" id="filterKelasCatatan">
+            <option value="">-- Semua Kelas --</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <input type="date" class="form-control" id="filterTanggalCatatan">
+        </div>
+        <div class="col-md-2">
+          <button class="btn btn-primary w-100" id="btnFilterCatatan">Tampilkan</button>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div class="table-responsive mt-3">
+        <table class="table table-striped" id="tabelCatatanKelas">
+          <thead class="table-light">
+            <tr>
+              <th>Tanggal</th>
+              <th>Kelas</th>
+              <th>Catatan</th>
+              <th>Tindak Lanjut</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+    <!-- ===================== SECTION CATATAN PELANGGARAN ===================== -->
+<section id="sectionPelanggaran" class="d-none">
+  <div class="card shadow-sm">
+    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+      <span>🚨 Input & Rekap Pelanggaran Siswa</span>
+      <div>
+        <button id="exportPelanggaranExcel" class="btn btn-success btn-sm">📗 Export Excel</button>
+        <button id="exportPelanggaranPDF" class="btn btn-danger btn-sm">📕 Export PDF</button>
+      </div>
+    </div>
+
+    <div class="card-body">
+      <!-- FORM INPUT -->
+      <form id="formPelanggaran" class="row g-2 mb-4">
+        <div class="col-md-2">
+          <label>Tanggal</label>
+          <input type="date" id="tanggalPelanggaran" class="form-control" required>
+        </div>
+        <div class="col-md-2">
+          <label>Kelas</label>
+          <select id="kelasPelanggaran" class="form-select" required>
+            <option value="">-- Pilih Kelas --</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label>Nama Siswa</label>
+          <select id="namaSiswaPelanggaran" class="form-select" required>
+            <option value="">-- Pilih Siswa --</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label>Jenis Pelanggaran</label>
+          <select id="jenisPelanggaran" class="form-select" required>
+            <option value="">-- Pilih Jenis Pelanggaran --</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label>Poin</label>
+          <input type="number" id="poinPelanggaran" class="form-control bg-light" readonly value="0">
+        </div>
+        <div class="col-12">
+          <label>Keterangan</label>
+          <textarea id="keteranganPelanggaran" class="form-control" rows="2"></textarea>
+        </div>
+        <div class="col-12 text-end">
+          <button type="submit" class="btn btn-primary mt-2">➕ Simpan Pelanggaran</button>
+        </div>
+      </form>
+
+      <!-- FILTER -->
+      <div class="row mb-3">
+        <div class="col-md-4">
+          <select id="filterKelasPelanggaran" class="form-select">
+            <option value="">-- Filter Berdasarkan Kelas --</option>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <select id="filterSiswaPelanggaran" class="form-select">
+            <option value="">-- Filter Berdasarkan Siswa --</option>
+          </select>
+        </div>
+        <div class="col-md-4 text-end">
+          <button id="btnCetakPerSiswa" class="btn btn-success btn-sm">🖨️ Cetak Per Siswa</button>
+          <button id="btnCetakPerKelas" class="btn btn-secondary btn-sm">🖨️ Cetak Per Kelas</button>
+        </div>
+      </div>
+
+      <!-- TABEL REKAP -->
+      <div class="table-responsive">
+        <table class="table table-bordered table-striped align-middle text-center" id="tabelPelanggaran">
+          <thead class="table-light">
+            <tr>
+              <th>Tanggal</th>
+              <th>Nama Siswa</th>
+              <th>Kelas</th>
+              <th>Jenis</th>
+              <th>Kategori</th>
+              <th>Poin</th>
+              <th>Keterangan</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+
+  </div>
+
+  <!-- jsPDF UMD -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<!-- jsPDF AutoTable -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+  <!-- Integrasi File JS -->
+  <script type="module" src="js/dashboard_guru.js"></script>
+</body>
+</html>

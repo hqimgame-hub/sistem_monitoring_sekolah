@@ -1,0 +1,111 @@
+--- a/Public/dashboard_admin.html
++++ b/Public/dashboard_admin.html
+@@
+-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
++    <!-- XLSX & QRCode dipindahkan ke lazy-load di JS -->
+
+@@
+-    <form id="formUser" class="bg-white shadow-md rounded p-4 grid grid-cols-2 gap-4">
++    <form id="formUser" class="bg-white shadow-md rounded p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+
+@@
+-    <form id="formSiswa" class="bg-white shadow-md rounded p-4 grid grid-cols-2 gap-4">
++    <form id="formSiswa" class="bg-white shadow-md rounded p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+
+@@
+       <div class="overflow-x-auto">
+         <table id="tabelAbsensi" class="min-w-full bg-white shadow-md rounded">
+           ...
+         </table>
+       </div>
+
++      <!-- Card view untuk mobile -->
++      <div id="gridAbsensiMobile" class="hidden grid grid-cols-1 gap-3 mt-4"></div>
+
+@@
+-    <script src="js/dashboard_admin.js"></script>
++    <script src="js/dashboard_admin.js"></script>
+--- a/Public/js/dashboard_admin.js
++++ b/Public/js/dashboard_admin.js
+@@
+-try {
+-  await signInWithEmailAndPassword(auth, "admin@sekolah.com", "admin123");
+-  console.log("Admin logged in");
+-} catch (e) {
+-  console.warn("Gagal login admin otomatis:", e.message);
+-}
++// AUTO LOGIN DINONAKTIFKAN (ALASAN KEAMANAN)
+
++// ========== LAZY LOADER ==========
++async function loadScript(url) {
++  return new Promise((resolve, reject) => {
++    if (document.querySelector(`script[data-src="${url}"]`)) return resolve();
++    const s = document.createElement("script");
++    s.src = url;
++    s.async = true;
++    s.setAttribute("data-src", url);
++    s.onload = () => resolve();
++    s.onerror = reject;
++    document.head.appendChild(s);
++  });
++}
++
++async function ensureXLSX() {
++  if (!window.XLSX)
++    await loadScript("https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js");
++}
++
++async function ensureQRCode() {
++  if (!window.QRCode)
++    await loadScript("https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js");
++}
++
++async function ensureChart() {
++  if (!window.Chart)
++    await loadScript("https://cdn.jsdelivr.net/npm/chart.js");
++}
+
+@@   // IMPORT EXCEL
+-const wb = XLSX.read(data, { type: "array" });
++await ensureXLSX();
++const wb = XLSX.read(data, { type: "array" });
+
+@@   // GENERATE QR
+-new QRCode(tempDiv, { text: id, width: 256, height: 256 });
++await ensureQRCode();
++new QRCode(tempDiv, { text: id, width: 256, height: 256 });
+
+@@   // RENDER GRAFIK
+-renderGrafikAbsensi(list);
++await ensureChart();
++renderGrafikAbsensi(list);
+
++// ========== MOBILE CARD VIEW ==========
++function renderTabelAbsensiResponsive(data) {
++  const mobile = window.innerWidth < 640;
++  const table = document.getElementById("tabelAbsensi");
++  const grid = document.getElementById("gridAbsensiMobile");
++  if (!grid) return;
++
++  if (mobile) {
++    grid.innerHTML = data.map(item => `
++      <div class="bg-white p-3 rounded shadow">
++        <div class="font-semibold">${item.nama || '-'}</div>
++        <div class="text-sm text-gray-500">${item.kelas || '-'}</div>
++        <div class="mt-2 text-sm">Status: <b>${item.status || '-'}</b></div>
++        <div class="text-xs text-gray-400">${item.tanggal || '-'}</div>
++      </div>
++    `).join("");
++
++    table.classList.add("hidden");
++    grid.classList.remove("hidden");
++  } else {
++    table.classList.remove("hidden");
++    grid.classList.add("hidden");
++  }
++}
++
++window.addEventListener("resize", () => {
++  if (window.cachedAbsensi) renderTabelAbsensiResponsive(window.cachedAbsensi);
++});

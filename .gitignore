@@ -1,0 +1,33 @@
+# =======================================================
+# FIREBASE PROJECT IGNORE RULES (Untuk root folder)
+# =======================================================
+
+# File Log & Cache
+firebase-debug.log
+firebase-debug.*.log
+.firebase/
+.firebaserc
+.DS_Store
+
+# Folder Dependencies (WAJIB DIHAPUS)
+node_modules/
+
+# Environment Variables (Sangat Penting untuk Kerahasiaan)
+.env
+.env.local
+.env.*
+
+# Service Account Keys (File Kunci Rahasia Admin)
+# JANGAN PERNAH DI UPLOAD, hapus baris ini hanya jika Anda yakin
+# file kunci admin Anda (misal: my-admin-key.json) sudah aman.
+*.json
+!firebase.json
+!package.json
+
+
+# =======================================================
+# FIREBASE FUNCTIONS RULES (Untuk sub-folder 'functions')
+# =======================================================
+
+# Dependencies di dalam functions/ (WAJIB DIHAPUS)
+functions/node_modules/

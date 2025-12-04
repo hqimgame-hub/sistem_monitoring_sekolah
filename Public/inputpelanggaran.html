@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Input Pelanggaran Siswa</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 text-gray-800 min-h-screen flex flex-col">
+
+  <!-- HEADER -->
+  <header class="bg-red-600 text-white py-4 shadow-md sticky top-0 z-50">
+  <div class="max-w-5xl mx-auto px-4 flex justify-between items-center">
+    
+    <h1 class="text-lg font-bold">🚨 Input Pelanggaran</h1>
+
+    <div class="flex items-center gap-3">
+      <!-- Nama User -->
+      <span id="namaUser" class="font-semibold"></span>
+
+      <!-- Tombol Logout -->
+      <button id="logoutBtn" class="bg-white text-red-600 px-3 py-1 rounded text-sm">
+        Logout
+      </button>
+    </div>
+
+  </div>
+</header>
+
+
+  <main class="max-w-5xl mx-auto w-full p-4 space-y-6 pb-24">
+
+    <!-- FORM INPUT -->
+    <section class="bg-white shadow rounded-lg p-4">
+      <h2 class="text-lg font-bold mb-4">📝 Tambah Pelanggaran</h2>
+
+      <form id="formPelanggaran" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+        <div>
+          <label class="block text-sm font-medium mb-1">Kelas</label>
+          <select id="pilihKelas" class="border p-3 rounded w-full text-base bg-gray-50">
+            <option value="">-- Pilih Kelas --</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium mb-1">Nama Siswa</label>
+          <select id="namaSiswa" class="border p-3 rounded w-full text-base bg-gray-50">
+            <option value="">-- Pilih Siswa --</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium mb-1">Jenis Pelanggaran</label>
+          <select id="jenisPelanggaran" class="border p-3 rounded w-full text-base bg-gray-50">
+            <option value="">-- Pilih Jenis --</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium mb-1">Poin</label>
+          <input id="poin" readonly class="border p-3 rounded w-full bg-gray-100 text-base" />
+        </div>
+
+        <div class="md:col-span-2">
+          <label class="block text-sm font-medium mb-1">Keterangan (Opsional)</label>
+          <textarea id="keterangan" class="border p-3 rounded w-full text-base h-24 bg-gray-50"></textarea>
+        </div>
+
+        <div class="md:col-span-2">
+          <button class="w-full bg-red-500 hover:bg-red-600 text-white p-3 rounded text-lg">
+            Simpan Pelanggaran
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <!-- RIWAYAT PELANGGARAN -->
+    <section class="bg-white shadow rounded-lg p-4">
+      <h2 class="text-lg font-bold mb-4">📋 Riwayat Pelanggaran</h2>
+
+      <div class="flex gap-3 mb-4">
+        <select id="filterKelas" class="border p-2 rounded text-sm flex-1 bg-gray-50">
+          <option value="">Semua Kelas</option>
+        </select>
+
+        <select id="filterSiswa" class="border p-2 rounded text-sm flex-1 bg-gray-50">
+          <option value="">Semua Siswa</option>
+        </select>
+      </div>
+
+      <div class="overflow-x-auto border rounded-lg">
+        <table class="min-w-full text-sm">
+          <thead class="bg-gray-200 text-gray-700">
+            <tr>
+              <th class="p-2">Tanggal</th>
+              <th class="p-2">Nama</th>
+              <th class="p-2">Kelas</th>
+              <th class="p-2">Jenis</th>
+              <th class="p-2">Kategori</th>
+              <th class="p-2">Poin</th>
+            </tr>
+          </thead>
+          <tbody id="tabelPelanggaran" class="text-center"></tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- FLOAT BUTTON -->
+  <button id="fab" class="fixed bottom-4 right-4 bg-red-600 text-white p-4 rounded-full shadow-lg text-2xl">+</button>
+
+  <!-- JS MODULE -->
+  <script type="module" src="js/inputpelanggaran.js"></script>
+
+</body>
+</html>

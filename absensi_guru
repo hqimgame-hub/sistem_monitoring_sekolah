@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Absensi Siswa</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/Public/assets/css/style.css">
+</head>
+<body class="bg-light">
+  <nav class="navbar navbar-dark bg-primary px-3">
+    <h2 class="text-white">📋 Absensi Siswa</h2>
+    <button id="logoutBtn" class="btn btn-light btn-sm">Logout</button>
+  </nav>
+
+  <div class="container mt-4">
+    <!-- 🔹 Form Pilih Kelas & Tanggal -->
+    <div class="card shadow p-4 mb-4">
+      <h4>Form Absensi</h4>
+      <div class="row g-3 align-items-end">
+        <div class="col-md-4">
+          <label class="form-label">Kelas</label>
+          <select id="kelasSelect" class="form-select" required>
+            <option value="">-- Pilih Kelas --</option>
+            <option>VII A</option>
+            <option>VII B</option>
+            <option>VIII A</option>
+            <option>VIII B</option>
+            <option>IX A</option>
+            <option>IX B</option>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Tanggal</label>
+          <input type="date" id="tanggalAbsensi" class="form-control" required>
+        </div>
+        <div class="col-md-4">
+          <button id="btnLoadSiswa" class="btn btn-primary w-100">Tampilkan Daftar Siswa</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 🔹 Daftar Siswa -->
+    <div class="card shadow p-4">
+      <h4>Daftar Siswa</h4>
+      <table class="table table-bordered mt-3" id="tabelAbsensi">
+        <thead class="table-primary">
+          <tr>
+            <th>No</th>
+            <th>Nama Siswa</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td colspan="3" class="text-center text-muted">Pilih kelas dan tanggal untuk menampilkan daftar</td></tr>
+        </tbody>
+      </table>
+      <button id="btnSimpanAbsensi" class="btn btn-success w-100 mt-3" disabled>💾 Simpan Absensi</button>
+      <div id="msg" class="mt-3 text-center fw-bold"></div>
+    </div>
+  </div>
+
+  <!-- 🔹 Firebase Script -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+    import { 
+      getFirestore, collection, addDoc, getDocs, doc, setDoc, query, where, serverTimestamp 
+    } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
+
+    // Konfigurasi Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyAXg6GUd0Aw1Ku0DmWKN0VNGgrbluO26i8",
+      authDomain: "sistem-sekolah-6a1d5.firebaseapp.com",
+      projectId: "sistem-sekolah-6a1d5",
+      storageBucket: "sistem-sekolah-6a1d5.appspot.com",
+      messagingSenderId: "152901594945",
+      appId: "1:152901594945:web:a672dd14fe231a89bebbc0"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+
+    let currentUser = null;
+    let daftarSiswa = [];
+
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        currentUser = user;
+      } else {
+        window.location.href = "index.html";
+      }
+    });
+
+    document.getElementById("logoutBtn").addEventListener("click", () => {
+      signOut(auth).then(() => window.location.href = "index.html");
+    });
+
+    // 🔹 Load daftar siswa berdasarkan kelas
+    document.getElementById("btnLoadSiswa").addEventListener("click", async () => {
+      const kelas = document.getElementById("kelasSelect").value;
+      const tanggal = document.getElementById("tanggalAbsensi").value;
+      const tabelBody = document.querySelector("#tabelAbsensi tbody");
+      const btnSimpan = document.getElementById("btnSimpanAbsensi");
+
+      if (!kelas || !tanggal) {
+        showNotif("⚠️ Pilih kelas dan tanggal terlebih dahulu!", "warning");
+        return;
+      }
+
+      const q = query(collection(db, "siswa"), where("kelas", "==", kelas));
+      const snapshot = await getDocs(q);
+
+      daftarSiswa = [];
+      tabelBody.innerHTML = "";
+
+      if (snapshot.empty) {
+        tabelBody.innerHTML = `<tr><td colspan="3" class="text-center text-muted">Tidak ada data siswa di kelas ini</td></tr>`;
+        btnSimpan.disabled = true;
+        return;
+      }
+
+      let no = 1;
+      snapshot.forEach(docu => {
+        const data = docu.data();
+        daftarSiswa.push({ id: docu.id, nama: data.nama, hadir: true });
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${no++}</td>
+          <td>${data.nama}</td>
+          <td>
+            <select class="form-select status-absen" data-id="${docu.id}">
+              <option value="Hadir" selected>Hadir</option>
+              <option value="Izin">Izin</option>
+              <option value="Sakit">Sakit</option>
+              <option value="Alpa">Alpa</option>
+            </select>
+          </td>
+        `;
+        tabelBody.appendChild(tr);
+      });
+
+      btnSimpan.disabled = false;
+      showNotif(`✅ Daftar siswa kelas ${kelas} berhasil dimuat.`, "success");
+    });
+
+    // 🔹 Simpan absensi ke Firestore
+    document.getElementById("btnSimpanAbsensi").addEventListener("click", async () => {
+      const kelas = document.getElementById("kelasSelect").value;
+      const tanggal = document.getElementById("tanggalAbsensi").value;
+      const statusSelects = document.querySelectorAll(".status-absen");
+
+      if (!kelas || !tanggal) {
+        showNotif("⚠️ Lengkapi kelas dan tanggal!", "warning");
+        return;
+      }
+
+      const absensiData = [];
+      statusSelects.forEach(sel => {
+        absensiData.push({
+          siswaId: sel.dataset.id,
+          status: sel.value
+        });
+      });
+
+      try {
+        await addDoc(collection(db, "absensi"), {
+          uid: currentUser.uid,
+          kelas,
+          tanggal,
+          data: absensiData,
+          created_at: serverTimestamp()
+        });
+        showNotif("✅ Absensi berhasil disimpan!", "success");
+        document.getElementById("btnSimpanAbsensi").disabled = true;
+      } catch (err) {
+        showNotif("❌ Gagal menyimpan: " + err.message, "danger");
+      }
+    });
+
+    // 🔹 Notifikasi
+    function showNotif(text, type) {
+      const msg = document.getElementById("msg");
+      msg.textContent = text;
+      msg.className = `mt-3 text-center fw-bold text-${type}`;
+      setTimeout(() => {
+        msg.textContent = "";
+        msg.className = "";
+      }, 4000);
+    }
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

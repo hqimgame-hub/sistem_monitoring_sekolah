@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard Absensi Sekolah</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+
+<body class="bg-gray-100 min-h-screen p-4">
+  <h1 class="text-2xl font-bold text-center mb-2 text-gray-700">📊 Dashboard Absensi Sekolah</h1>
+  <p class="text-sm text-center text-gray-500 mb-6">Pantau kehadiran siswa secara real-time</p>
+
+  <!-- Filter -->
+  <div class="flex flex-wrap justify-center gap-2 mb-4">
+    <input id="filterTanggal" type="date"
+      class="border px-3 py-2 rounded-lg shadow-sm focus:ring-2 focus:ring-green-400" />
+    <select id="filterKelas" class="border px-3 py-2 rounded-lg shadow-sm focus:ring-2 focus:ring-green-400">
+      <option value="">Semua Kelas</option>
+      <option value="7A">7A</option>
+      <option value="7B">7B</option>
+      <option value="8A">8A</option>
+      <option value="9A">9A</option>
+    </select>
+    <input id="inputCari" type="text" placeholder="Cari nama siswa..."
+      class="border px-3 py-2 rounded-lg shadow-sm focus:ring-2 focus:ring-green-400 w-48" />
+    <button id="btnExportPDF" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700">📄 PDF</button>
+    <button id="btnExportExcel" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">📊 Excel</button>
+  </div>
+
+  <!-- Statistik Cepat -->
+  <div id="statistik" class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
+    <div class="bg-white shadow rounded-lg p-4 text-center">
+      <h2 class="text-2xl font-bold text-green-600" id="jmlHadir">0</h2>
+      <p class="text-sm text-gray-500">Hadir</p>
+    </div>
+    <div class="bg-white shadow rounded-lg p-4 text-center">
+      <h2 class="text-2xl font-bold text-yellow-500" id="jmlIzin">0</h2>
+      <p class="text-sm text-gray-500">Izin</p>
+    </div>
+    <div class="bg-white shadow rounded-lg p-4 text-center">
+      <h2 class="text-2xl font-bold text-blue-500" id="jmlSakit">0</h2>
+      <p class="text-sm text-gray-500">Sakit</p>
+    </div>
+    <div class="bg-white shadow rounded-lg p-4 text-center">
+      <h2 class="text-2xl font-bold text-red-500" id="jmlAlfa">0</h2>
+      <p class="text-sm text-gray-500">Alfa</p>
+    </div>
+    <div class="bg-white shadow rounded-lg p-4 text-center">
+      <h2 class="text-2xl font-bold text-orange-600" id="jmlTerlambat">0</h2>
+      <p class="text-sm text-gray-500">Terlambat Hari Ini</p>
+    </div>
+  </div>
+
+  <!-- Grafik -->
+  <div class="bg-white shadow rounded-lg p-4 mb-6">
+    <canvas id="grafikKehadiran" height="100"></canvas>
+  </div>
+
+  <!-- Tabel -->
+  <div class="overflow-x-auto shadow-md rounded-lg">
+    <table class="min-w-full bg-white border border-gray-200" id="tabelAbsensi">
+      <thead class="bg-green-600 text-white">
+        <tr>
+          <th class="py-2 px-3 text-left">No</th>
+          <th class="py-2 px-3 text-left">Nama</th>
+          <th class="py-2 px-3 text-left">Kelas</th>
+          <th class="py-2 px-3 text-left">Status</th>
+          <th class="py-2 px-3 text-left">Keterangan</th>
+          <th class="py-2 px-3 text-left">Waktu</th>
+        </tr>
+      </thead>
+      <tbody id="isiTabel" class="divide-y divide-gray-200">
+        <tr><td colspan="6" class="text-center py-4 text-gray-400">⏳ Memuat data...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Rekap per siswa -->
+  <div id="rekapSiswa" class="mt-4 text-center text-gray-600"></div>
+
+  <!-- Modal detail siswa -->
+  <div id="modalDetail" class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+    <div class="bg-white p-6 rounded-lg w-96 shadow-lg relative">
+      <button id="closeModal" class="absolute top-2 right-3 text-gray-500 hover:text-red-600">✕</button>
+      <h2 id="detailNama" class="text-lg font-bold text-center mb-2"></h2>
+      <p id="detailInfo" class="text-sm text-gray-600 text-center mb-4"></p>
+      <canvas id="chartDetail" height="100"></canvas>
+    </div>
+  </div>
+
+  <footer class="text-center text-xs text-gray-400 mt-6">
+    © 2025 Sistem Absensi Sekolah — Dikembangkan oleh GPT-5 & Hqim18
+  </footer>
+
+  <!-- Pisahkan JS -->
+  <script type="module" src="js/dashboard_absensi.js"></script>
+</body>
+</html>

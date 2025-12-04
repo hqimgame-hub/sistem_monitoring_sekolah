@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Input Keterangan Siswa</title>
+  <!-- Tailwind CSS -->
+  <link
+    href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+    rel="stylesheet"
+  />
+</head>
+
+<body class="bg-gray-100 text-gray-800">
+  <!-- 🔹 NAVBAR -->
+  <nav class="bg-green-700 text-white p-3 flex justify-between items-center shadow">
+    <div>
+      <h1 id="judulHalaman" class="text-lg font-semibold"></h1>
+      <p id="kelasLabel" class="text-sm text-green-100"></p>
+    </div>
+    <button
+      id="btnLogout"
+      class="bg-red-500 hover:bg-red-600 px-3 py-1 rounded text-sm font-semibold"
+    >
+      Logout
+    </button>
+  </nav>
+
+  <!-- 🔹 MAIN CONTENT -->
+  <main class="p-5 max-w-5xl mx-auto bg-white mt-6 rounded-lg shadow">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3">
+      <h2 class="text-xl font-semibold text-green-700 flex items-center gap-2">
+        📋 Daftar Siswa
+      </h2>
+
+      <!-- 🔸 Filter tanggal + status realtime -->
+      <div class="flex flex-wrap items-center gap-2">
+        <label for="filterTanggal" class="text-sm font-medium text-gray-700">Tanggal:</label>
+        <input
+          type="date"
+          id="filterTanggal"
+          class="border p-2 rounded w-40 text-sm"
+        />
+        <button
+          id="btnResetTanggal"
+          class="bg-gray-200 hover:bg-gray-300 px-3 py-1 rounded text-sm"
+        >
+          Hari Ini
+        </button>
+
+        <span
+          id="statusRealtime"
+          class="hidden text-xs italic text-green-600 font-medium ml-2"
+        >
+          🟢 Data realtime aktif
+        </span>
+      </div>
+    </div>
+
+    <!-- 🔸 Tabel siswa -->
+    <div class="overflow-x-auto">
+      <table class="min-w-full border border-gray-200 text-sm">
+        <thead class="bg-gray-100 text-gray-700">
+          <tr>
+            <th class="p-2 border text-center w-12">No.</th>
+            <th class="p-2 border text-left">Nama Siswa</th>
+            <th class="p-2 border text-center w-32">Status Kehadiran</th>
+            <th class="p-2 border text-center">Keterangan</th>
+            <th class="p-2 border text-center w-32">Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="tabelSiswa" class="text-center">
+          <tr>
+            <td colspan="5" class="p-4 text-gray-500">
+              Memuat data siswa kelas Anda...
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <!-- 🔹 MODAL INPUT / EDIT KETERANGAN -->
+  <div
+    id="modalForm"
+    class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50"
+  >
+    <div class="bg-white p-6 rounded-lg w-96 shadow-lg">
+      <h3 id="modalTitle" class="text-lg font-semibold mb-3 text-green-700">
+        Tambah / Edit Keterangan
+      </h3>
+
+      <form id="formKeterangan" class="space-y-4">
+        <input type="hidden" id="siswaIdModal" />
+        <input type="hidden" id="absensiIdModal" />
+
+        <p class="mb-3 text-sm">
+          Siswa yang diedit:
+          <strong id="siswaNamaModal" class="text-blue-600"></strong>
+        </p>
+
+        <div>
+          <label class="block font-medium text-sm mb-1">Status Kehadiran</label>
+          <select
+            id="statusInput"
+            class="border rounded w-full p-2 focus:ring-green-500 focus:border-green-500 text-sm"
+          >
+            <option value="Sakit">Sakit</option>
+            <option value="Izin">Izin</option>
+            <option value="Alfa">Alfa</option>
+            <option value="Hadir">Hadir (Mengubah dari Ketidakhadiran)</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block font-medium text-sm mb-1">Keterangan Tambahan</label>
+          <input
+            type="text"
+            id="keteranganTambahanInput"
+            placeholder="Contoh: Surat dokter"
+            class="border rounded w-full p-2 focus:ring-green-500 focus:border-green-500 text-sm"
+          />
+        </div>
+
+        <div class="flex justify-end gap-3 pt-2">
+          <button
+            type="button"
+            id="btnBatal"
+            class="bg-gray-300 hover:bg-gray-400 px-4 py-1.5 rounded text-sm"
+          >
+            Batal
+          </button>
+          <button
+            type="submit"
+            id="btnSimpanKeterangan"
+            class="bg-green-600 hover:bg-green-700 text-white px-4 py-1.5 rounded text-sm font-semibold"
+          >
+            Simpan
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 🔹 SCRIPTS -->
+  <script type="module" src="js/input_keterangan.js"></script>
+</body>
+</html>

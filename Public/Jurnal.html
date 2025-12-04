@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Jurnal Guru</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body class="bg-light">
+  <nav class="navbar navbar-dark bg-primary px-3">
+    <h2 class="text-white">📘 Jurnal Guru</h2>
+    <button id="logoutBtn" class="btn btn-light btn-sm">Logout</button>
+  </nav>
+
+  <div class="container mt-4">
+    <!-- 🔹 Form Input/Edit -->
+    <div class="card shadow p-4">
+      <h3>Form Input / Edit Jurnal Guru</h3>
+      <form id="formJurnal">
+        <input type="hidden" id="editId" />
+
+        <div class="row">
+          <div class="col-md-4 mb-3">
+            <label for="tanggal" class="form-label">Tanggal</label>
+            <input type="date" id="tanggal" class="form-control" required>
+          </div>
+
+          <div class="col-md-4 mb-3">
+            <label for="kelas" class="form-label">Kelas</label>
+            <input type="text" id="kelas" class="form-control" placeholder="Contoh: VII A" required>
+          </div>
+
+          <div class="col-md-4 mb-3">
+            <label for="mapel" class="form-label">Mata Pelajaran</label>
+            <input type="text" id="mapel" class="form-control" placeholder="Contoh: IPA" required>
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label for="kegiatan" class="form-label">Kegiatan Pembelajaran</label>
+          <textarea id="kegiatan" class="form-control" rows="3" placeholder="Tuliskan kegiatan hari ini..." required></textarea>
+        </div>
+
+        <div class="mb-3">
+          <label for="tindakLanjut" class="form-label">Tindak Lanjut</label>
+          <textarea id="tindakLanjut" class="form-control" rows="3" placeholder="Rencana perbaikan atau tindak lanjut..." required></textarea>
+        </div>
+
+        <div class="mb-3">
+          <label for="siswaTidakMasuk" class="form-label">Siswa yang Tidak Masuk</label>
+          <textarea id="siswaTidakMasuk" class="form-control" rows="2" placeholder="Nama siswa tidak hadir (pisahkan koma)"></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-success w-100" id="saveBtn">💾 Simpan Jurnal</button>
+        <div id="msg" class="mt-2 text-center fw-bold"></div>
+      </form>
+    </div>
+
+    <!-- 🔹 Filter -->
+    <div class="card mt-4 shadow p-3">
+      <h4>Filter Jurnal</h4>
+      <div class="row g-2 align-items-end">
+        <div class="col-md-3">
+          <label class="form-label">Kelas</label>
+          <input type="text" id="filterKelas" class="form-control" placeholder="Contoh: VII A">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Mata Pelajaran</label>
+          <input type="text" id="filterMapel" class="form-control" placeholder="Contoh: IPA">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Tanggal</label>
+          <input type="date" id="filterTanggal" class="form-control">
+        </div>
+        <div class="col-md-3">
+          <button id="btnFilter" class="btn btn-primary w-100">Terapkan Filter</button>
+          <button id="btnReset" class="btn btn-secondary w-100 mt-2">Reset</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 🔹 Riwayat -->
+    <div class="card mt-4 shadow p-3">
+      <h3>Riwayat Jurnal</h3>
+      <table class="table table-striped mt-3" id="tabelJurnal">
+        <thead class="table-primary">
+          <tr>
+            <th>Tanggal</th>
+            <th>Kelas</th>
+            <th>Mapel</th>
+            <th>Kegiatan</th>
+            <th>Tindak Lanjut</th>
+            <th>Siswa Tidak Masuk</th>
+            <th>Aksi</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 🔹 Script Firebase -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
+    import { 
+      getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc, query, where, serverTimestamp 
+    } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAXg6GUd0Aw1Ku0DmWKN0VNGgrbluO26i8",
+      authDomain: "sistem-sekolah-6a1d5.firebaseapp.com",
+      projectId: "sistem-sekolah-6a1d5",
+      storageBucket: "sistem-sekolah-6a1d5.appspot.com",
+      messagingSenderId: "152901594945",
+      appId: "1:152901594945:web:a672dd14fe231a89bebbc0"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    let currentUser = null;
+
+    // === AUTENTIKASI ===
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        currentUser = user;
+        loadJurnal();
+      } else {
+        window.location.href = "index.html";
+      }
+    });
+
+    document.getElementById("logoutBtn").addEventListener("click", () => {
+      signOut(auth).then(() => {
+        window.location.href = "index.html";
+      });
+    });
+
+    // === CRUD: SIMPAN / UPDATE ===
+    const form = document.getElementById("formJurnal");
+    const msg = document.getElementById("msg");
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const id = document.getElementById("editId").value;
+      const data = {
+        uid: currentUser.uid,
+        tanggal: document.getElementById("tanggal").value,
+        kelas: document.getElementById("kelas").value,
+        mapel: document.getElementById("mapel").value,
+        kegiatan: document.getElementById("kegiatan").value,
+        tindakLanjut: document.getElementById("tindakLanjut").value,
+        siswaTidakMasuk: document.getElementById("siswaTidakMasuk").value,
+        updated_at: serverTimestamp()
+      };
+
+      try {
+        if (id) {
+          await updateDoc(doc(db, "jurnal_guru", id), data);
+          showNotif("✅ Jurnal berhasil diperbarui!", "success");
+        } else {
+          await addDoc(collection(db, "jurnal_guru"), data);
+          showNotif("✅ Jurnal berhasil disimpan!", "success");
+        }
+        form.reset();
+        document.getElementById("editId").value = "";
+        loadJurnal();
+      } catch (err) {
+        showNotif("❌ Gagal menyimpan: " + err.message, "danger");
+      }
+    });
+
+    // === BACA DATA ===
+    async function loadJurnal(filter = null) {
+      const tabel = document.querySelector("#tabelJurnal tbody");
+      tabel.innerHTML = "";
+
+      let q = query(collection(db, "jurnal_guru"), where("uid", "==", currentUser.uid));
+      const querySnapshot = await getDocs(q);
+
+      let dataList = [];
+      querySnapshot.forEach((docu) => {
+        dataList.push({ id: docu.id, ...docu.data() });
+      });
+
+      // Filter
+      if (filter) {
+        dataList = dataList.filter(item => {
+          return (!filter.kelas || item.kelas.includes(filter.kelas)) &&
+                 (!filter.mapel || item.mapel.includes(filter.mapel)) &&
+                 (!filter.tanggal || item.tanggal === filter.tanggal);
+        });
+      }
+
+      if (dataList.length === 0) {
+        tabel.innerHTML = "<tr><td colspan='7' class='text-center'>Tidak ada data</td></tr>";
+        return;
+      }
+
+      dataList.forEach(item => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${item.tanggal}</td>
+          <td>${item.kelas}</td>
+          <td>${item.mapel}</td>
+          <td>${item.kegiatan}</td>
+          <td>${item.tindakLanjut}</td>
+          <td>${item.siswaTidakMasuk || "-"}</td>
+          <td>
+            <button class="btn btn-sm btn-warning me-1" onclick="editJurnal('${item.id}', '${item.tanggal}', '${item.kelas}', '${item.mapel}', '${item.kegiatan.replace(/'/g,"&#39;")}', '${item.tindakLanjut.replace(/'/g,"&#39;")}', '${item.siswaTidakMasuk || ""}')">✏️</button>
+            <button class="btn btn-sm btn-danger" onclick="hapusJurnal('${item.id}')">🗑️</button>
+          </td>
+        `;
+        tabel.appendChild(tr);
+      });
+    }
+
+    // === EDIT ===
+    window.editJurnal = (id, tanggal, kelas, mapel, kegiatan, tindakLanjut, siswaTidakMasuk) => {
+      document.getElementById("editId").value = id;
+      document.getElementById("tanggal").value = tanggal;
+      document.getElementById("kelas").value = kelas;
+      document.getElementById("mapel").value = mapel;
+      document.getElementById("kegiatan").value = kegiatan;
+      document.getElementById("tindakLanjut").value = tindakLanjut;
+      document.getElementById("siswaTidakMasuk").value = siswaTidakMasuk;
+      showNotif("✏️ Mode edit aktif. Setelah ubah data, klik Simpan.", "info");
+    };
+
+    // === HAPUS ===
+    window.hapusJurnal = async (id) => {
+      if (confirm("Yakin ingin menghapus jurnal ini?")) {
+        await deleteDoc(doc(db, "jurnal_guru", id));
+        showNotif("🗑️ Jurnal berhasil dihapus!", "warning");
+        loadJurnal();
+      }
+    };
+
+    // === FILTER ===
+    document.getElementById("btnFilter").addEventListener("click", () => {
+      const filter = {
+        kelas: document.getElementById("filterKelas").value,
+        mapel: document.getElementById("filterMapel").value,
+        tanggal: document.getElementById("filterTanggal").value
+      };
+      loadJurnal(filter);
+    });
+
+    document.getElementById("btnReset").addEventListener("click", () => {
+      document.getElementById("filterKelas").value = "";
+      document.getElementById("filterMapel").value = "";
+      document.getElementById("filterTanggal").value = "";
+      loadJurnal();
+    });
+
+    // === NOTIFIKASI ===
+    function showNotif(text, type = "info") {
+      msg.textContent = text;
+      msg.className = `mt-2 text-center fw-bold text-${type}`;
+      setTimeout(() => {
+        msg.textContent = "";
+        msg.className = "";
+      }, 3000);
+    }
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
