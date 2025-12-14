@@ -1,0 +1,192 @@
+/* ========================================= */
+/* 1. RESET DAN IMPOR FONT (Keringanan)     */
+/* ========================================= */
+
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+/* Hanya mengimpor 3 weight (400, 600, 700) untuk menghemat bandwidth */
+
+/* Reset dasar untuk Box Model yang lebih prediktif */
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+/* ========================================= */
+/* 2. GLOBAL STYLES & TYPOGRAPHY             */
+/* ========================================= */
+
+:root {
+    /* Variabel Warna (Memudahkan Maintainability) */
+    --color-primary: #0f172a; /* Biru Tua/Hampir Hitam (Sidebar BG) */
+    --color-secondary: #6c757d; /* Abu-abu Sekunder */
+    --color-light: #f8f9fa; /* Latar Belakang Muda/Abu-abu */
+    --color-text-main: #212529; /* Teks Utama */
+    --color-text-light: #ffffff; /* Teks Putih */
+    --color-border: #dee2e6;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Poppins', sans-serif;
+    background-color: var(--color-light); /* Background aplikasi */
+    color: var(--color-text-main);
+    line-height: 1.6;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    color: var(--color-text-main);
+    font-weight: 600;
+}
+
+.text-secondary {
+    color: var(--color-secondary) !important;
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+/* ========================================= */
+/* 3. LAYOUT - MOBILE FIRST (Default)        */
+/* ========================================= */
+
+/* Sidebar di Mobile: Posisi relatif, full width di atas konten */
+.sidebar {
+    width: 100%;
+    height: auto;
+    background-color: var(--color-primary);
+    color: var(--color-text-light);
+    padding: 15px 10px;
+    position: relative; /* Jangan fixed di mobile */
+    z-index: 1000;
+}
+
+/* Konten utama: Tidak ada margin tambahan di mobile */
+.main-content {
+    padding: 20px 15px;
+    margin-left: 0; 
+}
+
+/* ========================================= */
+/* 4. COMPONENTS                             */
+/* ========================================= */
+
+.card {
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin-bottom: 25px;
+    background-color: var(--color-text-light);
+}
+
+.card-header {
+    background-color: transparent;
+    border-bottom: 1px solid var(--color-border);
+    padding: 15px 20px;
+    font-weight: 600;
+}
+
+.card-body {
+    padding: 20px;
+}
+
+.form-control {
+    display: block;
+    width: 100%;
+    padding: 10px 15px;
+    font-size: 1rem;
+    line-height: 1.5;
+    color: var(--color-text-main);
+    background-color: var(--color-text-light);
+    background-clip: padding-box;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.form-control:focus {
+    color: var(--color-text-main);
+    background-color: var(--color-text-light);
+    border-color: #80bdff; /* Fokus biru terang */
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.btn {
+    display: inline-block;
+    font-weight: 400;
+    color: var(--color-text-light);
+    text-align: center;
+    vertical-align: middle;
+    cursor: pointer;
+    background-color: var(--color-primary);
+    border: 1px solid var(--color-primary);
+    padding: 8px 15px;
+    font-size: 1rem;
+    border-radius: 6px;
+    transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out;
+}
+
+.btn:hover {
+    background-color: #1e293b; 
+    border-color: #1e293b;
+}
+
+/* ========================================= */
+/* 5. TABLE STYLES (Keterbacaan Data)        */
+/* ========================================= */
+
+.table {
+    width: 100%;
+    margin-bottom: 1rem;
+    color: var(--color-text-main);
+    border-collapse: collapse; /* Penting untuk tampilan bersih */
+}
+
+.table th,
+.table td {
+    padding: 12px; /* Padding lebih besar */
+    vertical-align: top;
+    border-top: 1px solid var(--color-border);
+}
+
+.table thead th {
+    vertical-align: bottom;
+    border-bottom: 2px solid var(--color-border);
+    font-weight: 600;
+    text-align: left;
+}
+
+/* Zebra Striping: Untuk keterbacaan baris */
+.table tbody tr:nth-of-type(odd) {
+    background-color: rgba(0, 0, 0, 0.03); /* Abu-abu sangat tipis */
+}
+
+
+/* ========================================= */
+/* 6. RESPONSIVENESS (Media Queries)         */
+/* ========================================= */
+
+/* Media Query untuk Tablet dan Desktop */
+@media (min-width: 992px) {
+    
+    /* === Layout Desktop === */
+    .sidebar {
+        width: 280px; /* Lebar lebih nyaman */
+        height: 100vh;
+        position: fixed; /* Sidebar tetap */
+        top: 0;
+        left: 0;
+        padding: 20px 15px;
+    }
+
+    .main-content {
+        /* Geser konten utama selebar sidebar */
+        margin-left: 280px; 
+        padding: 30px;
+    }
+
+    /* === Tabel Responsif Desktop === */
+    .table-responsive {
+        overflow-x: auto; /* Memungkinkan tabel di-scroll horizontal */
+        -webkit-overflow-scrolling: touch; /* Scrolling halus di iOS */
+    }
+}

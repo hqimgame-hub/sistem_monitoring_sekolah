@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <title>Sinkronisasi Data Siswa</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="flex flex-col items-center justify-center h-screen bg-gray-100">
+  <div class="bg-white shadow rounded p-6 text-center">
+    <h1 class="text-xl font-bold mb-4 text-red-600">🔄 Sinkronisasi Data Siswa</h1>
+    <p class="mb-4">Klik tombol di bawah ini untuk memeriksa dan memperbaiki data siswa di Firestore.</p>
+    <button id="btnSync" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Mulai Sinkronisasi</button>
+    <div id="status" class="mt-4 text-gray-700"></div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+    import {
+      getFirestore, getDocs, collection, doc, updateDoc
+    } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAXg6GUd0Aw1Ku0DmWKN0VNGgrbluO26i8",
+      authDomain: "sistem-sekolah-6a1d5.firebaseapp.com",
+      projectId: "sistem-sekolah-6a1d5",
+      storageBucket: "sistem-sekolah-6a1d5.firebasestorage.app",
+      messagingSenderId: "152901594945",
+      appId: "1:152901594945:web:a672dd14fe231a89bebbc0"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const btn = document.getElementById("btnSync");
+    const status = document.getElementById("status");
+
+    btn.addEventListener("click", async () => {
+      status.textContent = "⏳ Sinkronisasi sedang berjalan...";
+      let updated = 0;
+      const snap = await getDocs(collection(db, "siswa"));
+      for (const d of snap.docs) {
+        const data = d.data();
+        const ref = doc(db, "siswa", d.id);
+        const updateObj = {};
+        if (!data.kelas) continue;
+        updateObj.kelas = data.kelas.trim().toUpperCase();
+        if (typeof data.totalPoin !== "number") updateObj.totalPoin = 0;
+        if (!data.status) updateObj.status = "Aman";
+        if (!data.created_at) updateObj.created_at = new Date().toISOString();
+        if (Object.keys(updateObj).length > 0) {
+          await updateDoc(ref, updateObj);
+          updated++;
+        }
+      }
+      status.textContent = `✅ Sinkronisasi selesai. ${updated} data diperbarui.`;
+    });
+  </script>
+</body>
+</html>

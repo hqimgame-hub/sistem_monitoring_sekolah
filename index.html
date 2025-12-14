@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login Sistem Absensi</title>
+
+  <link rel="stylesheet" href="./style.css">
+
+  <style>
+    body {
+      background: linear-gradient(135deg, #f0f4f8, #c5d7e5);
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      padding: 1rem;
+    }
+
+    .login-box {
+      background: rgba(255, 255, 255, 0.96);
+      padding: 2.5rem;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: 0 10px 30px rgba(45, 78, 105, 0.15);
+      animation: fadeInUp 0.6s ease-out;
+    }
+
+    .btn-primary {
+      background-color: #38a169;
+      transition: background-color 0.3s, transform 0.2s;
+    }
+
+    .btn-primary:hover {
+      background-color: #2f855a;
+      transform: scale(1.02);
+    }
+
+    .text-main {
+      color: #38a169;
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    #googleLogin {
+      display: none;
+    }
+  </style>
+
+</head>
+
+<body>
+  <div class="login-box">
+    <div class="text-center mb-6">
+      <img src="assets/logo.png" alt="Logo Sekolah" class="mx-auto w-20 h-20 mb-2 rounded-full shadow-md">
+      <h1 class="text-2xl font-extrabold text-main">SISTEM MONITORING SEKOLAH</h1>
+      <p class="text-xs text-gray-500">Nama Sekolah</p>
+    </div>
+
+    <h2 class="text-xl font-semibold mb-6 text-center text-gray-700">Silakan Masuk</h2>
+
+    <form id="loginForm" class="space-y-4">
+      <div>
+        <label for="roleSelect" class="block text-sm font-medium text-gray-700 mb-1">Masuk Sebagai</label>
+        <select id="roleSelect"
+          class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-main focus:border-transparent">
+          <option value="">-- Pilih Peran --</option>
+          <option value="admin">Admin</option>
+          <option value="kepsek">Kepala Sekolah</option>
+          <option value="wali_kelas">Wali Kelas</option>
+          <option value="guru">Guru Mapel</option>
+          <option value="petugas_absen">Guru (Petugas Piket)</option>
+          <option value="umum">Input Pelanggaran</option>
+          <option value="ketua_kelas">Ketua Kelas</option>
+        </select>
+      </div>
+
+      <div>
+        <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+        <input id="email" type="email" placeholder="contoh@sekolah.sch.id"
+          class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-main focus:border-transparent"
+          required />
+      </div>
+
+      <div>
+        <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+        <input id="password" type="password" placeholder="••••••••"
+          class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-main focus:border-transparent"
+          required />
+      </div>
+
+      <p id="message" class="text-center text-sm font-medium pt-2 h-4"></p>
+
+      <button type="submit"
+        class="btn-primary text-white w-full py-2 rounded-lg font-semibold shadow-md hover:shadow-lg">
+        Masuk ke Sistem
+      </button>
+
+      <p class="text-center text-gray-400 text-xs mt-4">
+        © 2025 Sistem Absensi Sekolah
+      </p>
+    </form>
+  </div>
+
+  <script type="module" src="./src/js/index.js"></script>
+</body>
+
+</html>

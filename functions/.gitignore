@@ -1,0 +1,20 @@
+# Logs dan runtime data
+firebase-debug.log
+firebase-debug.*.log
+
+# Dependency (JANGAN DI UPLOAD, ini membuat upload berat)
+node_modules/
+bower_components/
+
+# Build output (file hasil compile)
+dist/
+build/
+.firebase/
+
+# Environment variables & Secrets (Sangat Penting untuk keamanan)
+.env
+.env.local
+.DS_Store
+
+# Jika Anda menggunakan Functions
+functions/node_modules/

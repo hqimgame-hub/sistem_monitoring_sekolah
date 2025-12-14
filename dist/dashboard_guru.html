@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dashboard Guru</title>
+
+  <!-- Local CSS (Tailwind) -->
+
+  <!-- Icon -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+
+  <!-- XLSX & jsPDF -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <!-- jsPDF AutoTable -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+  <script type="module" crossorigin src="/assets/dashboard_guru-D4pQK8QY.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/style-Cznge8x3.js">
+  <link rel="modulepreload" crossorigin href="/assets/Navbar-z9BVbuuM.js">
+  <link rel="modulepreload" crossorigin href="/assets/Sidebar-Ds6DUahJ.js">
+  <link rel="stylesheet" crossorigin href="/assets/style-BBFzvd_0.css">
+</head>
+
+<body>
+
+  <!-- Main Content controlled by JS -->
+  <div id="main-content" class="p-4 mt-16 sm:ml-64 transition-all duration-300">
+    <!-- Section Isi Jurnal -->
+    <section id="sectionIsi" class="active space-y-6">
+      <div class="bg-white shadow-md rounded-lg p-6">
+        <h2 class="text-lg font-bold border-b-2 border-blue-500 pb-2 mb-4 text-gray-700">Isi Jurnal Mengajar</h2>
+
+        <form id="formJurnal" class="space-y-4">
+          <input type="hidden" id="editId">
+
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <!-- 📅 Tanggal -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal</label>
+              <input type="date" id="tanggal"
+                class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                required>
+            </div>
+
+            <!-- 🏫 Kelas -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Kelas</label>
+              <select id="kelas"
+                class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                required></select>
+            </div>
+
+            <!-- 📚 Mata Pelajaran -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Mata Pelajaran</label>
+              <select id="mapel"
+                class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                required>
+                <option value="">-- Pilih Mata Pelajaran --</option>
+              </select>
+            </div>
+
+            <!-- ⏰ Jam Ke -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Jam Ke-</label>
+              <div id="jamKeContainer" class="flex flex-wrap gap-2 mt-1">
+                <label class="flex items-center space-x-1 cursor-pointer"><input type="checkbox" name="jamKe" value="1"
+                    class="rounded text-blue-600 focus:ring-blue-500"><span>1</span></label>
+                <label class="flex items-center space-x-1 cursor-pointer"><input type="checkbox" name="jamKe" value="2"
+                    class="rounded text-blue-600 focus:ring-blue-500"><span>2</span></label>
+                <label class="flex items-center space-x-1 cursor-pointer"><input type="checkbox" name="jamKe" value="3"
+                    class="rounded text-blue-600 focus:ring-blue-500"><span>3</span></label>
+                <label class="flex items-center space-x-1 cursor-pointer"><input type="checkbox" name="jamKe" value="4"
+                    class="rounded text-blue-600 focus:ring-blue-500"><span>4</span></label>
+                <label class="flex items-center space-x-1 cursor-pointer"><input type="checkbox" name="jamKe" value="5"
+                    class="rounded text-blue-600 focus:ring-blue-500"><span>5</span></label>
+                <label class="flex items-center space-x-1 cursor-pointer"><input type="checkbox" name="jamKe" value="6"
+                    class="rounded text-blue-600 focus:ring-blue-500"><span>6</span></label>
+                <label class="flex items-center space-x-1 cursor-pointer"><input type="checkbox" name="jamKe" value="7"
+                    class="rounded text-blue-600 focus:ring-blue-500"><span>7</span></label>
+                <label class="flex items-center space-x-1 cursor-pointer"><input type="checkbox" name="jamKe" value="8"
+                    class="rounded text-blue-600 focus:ring-blue-500"><span>8</span></label>
+                <label class="flex items-center space-x-1 cursor-pointer"><input type="checkbox" name="jamKe" value="9"
+                    class="rounded text-blue-600 focus:ring-blue-500"><span>9</span></label>
+              </div>
+            </div>
+          </div>
+
+          <!-- 🚫 Siswa Tidak Masuk -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Siswa Tidak Masuk</label>
+            <input type="text" id="siswaTidakMasuk"
+              class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="-">
+          </div>
+
+          <!-- 📋 Kegiatan Pembelajaran -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Kegiatan Pembelajaran</label>
+            <textarea id="kegiatan" rows="3"
+              class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              required></textarea>
+          </div>
+
+          <!-- 🧭 Tindak Lanjut -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Tindak Lanjut</label>
+            <textarea id="tindakLanjut" rows="2"
+              class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"></textarea>
+          </div>
+
+          <!-- 💾 Tombol Simpan -->
+          <div class="flex justify-end pt-2">
+            <button type="submit"
+              class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-lg shadow-sm transition-colors duration-200 flex items-center gap-2">
+              <i class="bi bi-save"></i> Simpan Jurnal
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+
+    <!-- Section Daftar Jurnal -->
+    <section id="sectionDaftar" class="hidden space-y-6">
+      <div class="bg-white shadow-md rounded-lg overflow-hidden">
+        <div
+          class="p-4 border-b border-gray-200 flex flex-col md:flex-row justify-between items-center gap-4 bg-gray-50">
+          <h2 class="text-lg font-bold text-gray-700">Daftar Jurnal Mengajar</h2>
+          <div class="flex gap-2">
+            <button id="btnDeleteSelectedJurnal" onclick="deleteSelectedJurnal()"
+              class="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded text-sm font-medium transition-colors flex items-center gap-2">
+              <i class="bi bi-trash"></i> Hapus Terpilih
+            </button>
+            <button id="exportJurnalExcel"
+              class="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded text-sm font-medium transition-colors flex items-center gap-2">
+              <i class="bi bi-file-earmark-excel"></i> Export Excel
+            </button>
+            <button id="exportJurnalPDF"
+              class="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded text-sm font-medium transition-colors flex items-center gap-2">
+              <i class="bi bi-file-earmark-pdf"></i> Export PDF
+            </button>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm text-left text-gray-500" id="tabelJurnal">
+            <thead class="text-xs text-gray-700 uppercase bg-gray-100 border-b">
+              <tr>
+                <th class="px-4 py-3 font-semibold"><input type="checkbox" onchange="toggleSelectAllJurnal(this)"
+                    class="rounded"></th>
+                <th class="px-4 py-3 font-semibold">Tanggal</th>
+                <th class="px-4 py-3 font-semibold">Kelas</th>
+                <th class="px-4 py-3 font-semibold">Mapel</th>
+                <th class="px-4 py-3 font-semibold">Jam</th>
+                <th class="px-4 py-3 font-semibold w-1/4">Kegiatan</th>
+                <th class="px-4 py-3 font-semibold w-1/4">Tindak Lanjut</th>
+                <th class="px-4 py-3 font-semibold">Absen</th>
+                <th class="px-4 py-3 font-semibold text-center">Aksi</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200 bg-white">
+              <!-- JS Injected Row -->
+            </tbody>
+          </table>
+        </div>
+        <div id="pagJurnal" class="p-4 border-t border-gray-100 bg-gray-50"></div>
+      </div>
+    </section>
+
+    <!-- Section Nilai Per Bab (Fixed) -->
+    <section id="sectionInputNilai" class="hidden space-y-6">
+      <div class="bg-white shadow-md rounded-lg p-6">
+        <h2 class="text-lg font-bold border-b-2 border-purple-500 pb-2 mb-4 text-gray-700">Input Nilai Per Bab</h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <select id="kelasInputSelect"
+            class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-purple-500 outline-none"></select>
+          <select id="mapelInputSelect"
+            class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-purple-500 outline-none">
+            <option value="">-- Pilih Mata Pelajaran --</option>
+          </select>
+          <select id="babSelect"
+            class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-purple-500 outline-none">
+            <option value="">-- Pilih Bab --</option>
+            <option value="Bab 1">Bab 1</option>
+            <option value="Bab 2">Bab 2</option>
+            <option value="Bab 3">Bab 3</option>
+            <option value="Bab 4">Bab 4</option>
+            <option value="Bab 5">Bab 5</option>
+            <option value="Bab 6">Bab 6</option>
+            <option value="Bab 7">Bab 7</option>
+            <option value="Bab 8">Bab 8</option>
+            <option value="Bab 9">Bab 9</option>
+            <option value="Bab 10">Bab 10</option>
+            <option value="Bab 11">Bab 11</option>
+            <option value="Bab 12">Bab 12</option>
+          </select>
+          <button id="btnLoadSiswaNilai"
+            class="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-lg shadow-sm w-full">
+            Tampilkan Siswa
+          </button>
+        </div>
+
+        <div id="formNilaiContainer" class="hidden mt-4">
+          <form id="formNilaiSiswa">
+            <div class="overflow-x-auto border rounded-lg shadow-sm mb-4">
+              <table class="w-full text-sm text-left" id="tabelInputNilai">
+                <thead class="bg-purple-100 text-purple-800 uppercase text-xs">
+                  <tr>
+                    <th class="px-4 py-3 border-b">Nama Siswa</th>
+                    <th class="px-4 py-3 border-b w-24 text-center">Tugas 1</th>
+                    <th class="px-4 py-3 border-b w-24 text-center">Tugas 2</th>
+                    <th class="px-4 py-3 border-b w-24 text-center">Tugas 3</th>
+                    <th class="px-4 py-3 border-b w-24 text-center">UH</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100 bg-white"></tbody>
+              </table>
+            </div>
+            <div class="flex justify-end">
+              <button type="submit"
+                class="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-6 rounded-lg shadow-sm flex items-center gap-2">
+                💾 Simpan Nilai
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section Nilai Semester / Tahun -->
+    <!-- Section Nilai Semester / Tahun -->
+    <section id="sectionNilaiSemester" class="hidden space-y-6">
+      <div class="bg-white shadow-md rounded-lg p-6">
+        <h2 class="text-lg font-bold border-b-2 border-indigo-500 pb-2 mb-4 text-gray-700">Input Nilai SAS & SAT</h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <select id="kelasSemesterSelect"
+            class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-indigo-500 outline-none"></select>
+          <select id="mapelInputSAS"
+            class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-indigo-500 outline-none">
+            <option value="">-- Pilih Mata Pelajaran --</option>
+          </select>
+          <button id="btnMuatSiswaSemester"
+            class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded-lg shadow-sm w-full md:col-start-4">
+            Muat Siswa
+          </button>
+        </div>
+
+        <div id="formSemesterContainer" class="hidden mt-4">
+          <form id="formNilaiSemester">
+            <div class="overflow-x-auto border rounded-lg shadow-sm mb-4">
+              <table class="w-full text-sm text-left" id="tabelInputNilaiSemester">
+                <thead class="bg-indigo-100 text-indigo-800 uppercase text-xs">
+                  <tr>
+                    <th class="px-4 py-3 border-b">Nama Siswa</th>
+                    <th class="px-4 py-3 border-b w-32 text-center">Nilai SAS</th>
+                    <th class="px-4 py-3 border-b w-32 text-center">Nilai SAT</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100 bg-white"></tbody>
+              </table>
+            </div>
+            <div class="flex justify-end">
+              <button type="submit"
+                class="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-6 rounded-lg shadow-sm flex items-center gap-2">
+                💾 Simpan Nilai
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section Rekap Nilai -->
+    <!-- Section Rekap Nilai -->
+    <section id="sectionRekapNilai" class="hidden space-y-6">
+      <div class="bg-white shadow-md rounded-lg p-6">
+        <h2 class="text-lg font-bold border-b-2 border-teal-500 pb-2 mb-4 text-gray-700 flex items-center gap-2">
+          <i class="bi bi-bar-chart-line"></i> Rekap Nilai
+        </h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <select id="filterKelasNilai"
+            class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-teal-500 outline-none"></select>
+          <select id="filterMapelNilai"
+            class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-teal-500 outline-none">
+            <option value="">-- Semua Mapel --</option>
+          </select>
+          <select id="filterBabNilai"
+            class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-teal-500 outline-none">
+            <option value="">Semua Bab</option>
+            <option value="Bab 1">Bab 1</option>
+            <option value="Bab 2">Bab 2</option>
+            <option value="Bab 3">Bab 3</option>
+            <option value="Bab 4">Bab 4</option>
+            <option value="Bab 5">Bab 5</option>
+            <option value="Bab 6">Bab 6</option>
+            <option value="Bab 7">Bab 7</option>
+            <option value="Bab 8">Bab 8</option>
+            <option value="Bab 9">Bab 9</option>
+            <option value="Bab 10">Bab 10</option>
+            <option value="Bab 11">Bab 11</option>
+            <option value="Bab 12">Bab 12</option>
+          </select>
+          <button id="btnFilterNilai"
+            class="bg-teal-600 hover:bg-teal-700 text-white font-medium py-2 px-4 rounded-lg shadow-sm w-full">
+            Tampilkan
+          </button>
+        </div>
+
+        <div class="overflow-x-auto border rounded-lg shadow-sm">
+          <table class="w-full text-sm text-left" id="tabelRekapNilai">
+            <thead class="bg-teal-100 text-teal-800 uppercase text-xs">
+              <tr>
+                <th class="px-4 py-3 border-b">Nama Siswa</th>
+                <th class="px-4 py-3 border-b">Mapel</th>
+                <th class="px-4 py-3 border-b">Bab/Jenis</th>
+                <th class="px-4 py-3 border-b text-center">Tugas1</th>
+                <th class="px-4 py-3 border-b text-center">Tugas2</th>
+                <th class="px-4 py-3 border-b text-center">Tugas3</th>
+                <th class="px-4 py-3 border-b text-center">UH</th>
+                <th class="px-4 py-3 border-b text-center">SAS/SAT</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 bg-white text-center"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section Catatan Kelas -->
+    <!-- Section Catatan Kelas -->
+    <section id="sectionCatatan" class="hidden space-y-6">
+      <div class="bg-white shadow-md rounded-lg overflow-hidden">
+        <div
+          class="p-4 border-b border-gray-200 flex flex-col md:flex-row justify-between items-center gap-4 bg-orange-50">
+          <h2 class="text-lg font-bold text-gray-700">Catatan Kelas</h2>
+          <div class="flex gap-2">
+            <button id="btnDeleteSelectedCatatan" onclick="deleteSelectedCatatan()"
+              class="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded text-sm font-medium transition-colors flex items-center gap-2">
+              <i class="bi bi-trash"></i> Hapus Terpilih
+            </button>
+            <button id="exportCatatanExcel"
+              class="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded text-sm font-medium transition-colors flex items-center gap-2">
+              <i class="bi bi-file-earmark-excel"></i> Export Excel
+            </button>
+            <button id="exportCatatanPDF"
+              class="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded text-sm font-medium transition-colors flex items-center gap-2">
+              <i class="bi bi-file-earmark-pdf"></i> Export PDF
+            </button>
+          </div>
+        </div>
+
+        <div class="p-6">
+          <!-- Form Input -->
+          <form id="formCatatanKelas" class="bg-gray-50 border border-gray-100 rounded-lg p-4 mb-6">
+            <input type="hidden" id="editIdCatatan">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal</label>
+                <input type="date" id="tanggalKelas"
+                  class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-orange-500 outline-none"
+                  required>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Kelas</label>
+                <select id="kelasKelas"
+                  class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-orange-500 outline-none"
+                  required></select>
+              </div>
+            </div>
+
+            <div class="mb-4">
+              <label class="block text-sm font-medium text-gray-700 mb-1">Catatan Umum</label>
+              <textarea id="catatanKelas" rows="3"
+                class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-orange-500 outline-none"
+                placeholder="Tuliskan kondisi kelas hari ini..." required></textarea>
+            </div>
+
+            <div class="mb-4">
+              <label class="block text-sm font-medium text-gray-700 mb-1">Tindak Lanjut / Rencana</label>
+              <textarea id="tindakLanjutKelas" rows="2"
+                class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-orange-500 outline-none"
+                placeholder="Misal: Penguatan materi, diskusi tambahan, dll."></textarea>
+            </div>
+
+            <div class="flex justify-end">
+              <button type="submit"
+                class="bg-orange-600 hover:bg-orange-700 text-white font-medium py-2 px-6 rounded-lg shadow-sm flex items-center gap-2">
+                <i class="bi bi-save"></i> Simpan Catatan
+              </button>
+            </div>
+          </form>
+
+          <!-- Filter -->
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4 items-end">
+            <div>
+              <label class="block text-xs font-semibold text-gray-500 mb-1">Filter Kelas</label>
+              <select id="filterKelasCatatan"
+                class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-orange-500">
+                <option value="">-- Semua Kelas --</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-gray-500 mb-1">Filter Tanggal</label>
+              <input type="date" id="filterTanggalCatatan"
+                class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-orange-500">
+            </div>
+            <div>
+              <button id="btnFilterCatatan"
+                class="bg-gray-600 hover:bg-gray-700 text-white font-medium py-2 px-4 rounded-lg w-full">
+                Tampilkan
+              </button>
+            </div>
+          </div>
+
+          <!-- Table -->
+          <div class="overflow-x-auto border rounded-xl shadow-sm">
+            <table class="w-full text-sm text-left" id="tabelCatatanKelas">
+              <thead class="bg-orange-100 text-orange-800 uppercase text-xs">
+                <tr>
+                  <th class="px-4 py-3 border-b font-semibold"><input type="checkbox"
+                      onchange="toggleSelectAllCatatan(this)" class="rounded"></th>
+                  <th class="px-4 py-3 border-b font-semibold">Tanggal</th>
+                  <th class="px-4 py-3 border-b font-semibold">Kelas</th>
+                  <th class="px-4 py-3 border-b font-semibold w-1/3">Catatan</th>
+                  <th class="px-4 py-3 border-b font-semibold w-1/3">Tindak Lanjut</th>
+                  <th class="px-4 py-3 border-b font-semibold text-center">Aksi</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-100 bg-white"></tbody>
+            </table>
+          </div>
+          <div id="pagCatatan" class="p-4 border-t border-gray-100 bg-gray-50"></div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ===================== SECTION CATATAN PELANGGARAN ===================== -->
+    <!-- Section Catatan Pelanggaran -->
+    <section id="sectionPelanggaran" class="hidden space-y-6">
+      <div class="bg-white shadow-md rounded-lg overflow-hidden">
+        <div
+          class="p-4 border-b border-gray-200 flex flex-col md:flex-row justify-between items-center gap-4 bg-red-50">
+          <h2 class="text-lg font-bold text-gray-700">Input & Rekap Pelanggaran Siswa</h2>
+          <div class="flex gap-2">
+            <button id="exportPelanggaranExcel"
+              class="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded text-sm font-medium transition-colors flex items-center gap-2">
+              <i class="bi bi-file-earmark-excel"></i> Export Excel
+            </button>
+            <button id="exportPelanggaranPDF"
+              class="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded text-sm font-medium transition-colors flex items-center gap-2">
+              <i class="bi bi-file-earmark-pdf"></i> Export PDF
+            </button>
+          </div>
+        </div>
+
+        <div class="p-6">
+          <!-- FORM INPUT -->
+          <form id="formPelanggaran"
+            class="bg-gray-50 border border-gray-100 rounded-lg p-4 mb-6 grid grid-cols-1 md:grid-cols-12 gap-4">
+            <div class="md:col-span-2">
+              <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal</label>
+              <input type="date" id="tanggalPelanggaran"
+                class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-500" required>
+            </div>
+            <div class="md:col-span-2">
+              <label class="block text-sm font-medium text-gray-700 mb-1">Kelas</label>
+              <select id="kelasPelanggaran"
+                class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-red-500"
+                required>
+                <option value="">-- Pilih Kelas --</option>
+              </select>
+            </div>
+            <div class="md:col-span-3">
+              <label class="block text-sm font-medium text-gray-700 mb-1">Nama Siswa</label>
+              <select id="namaSiswaPelanggaran"
+                class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-red-500"
+                required>
+                <option value="">-- Pilih Siswa --</option>
+              </select>
+            </div>
+            <div class="md:col-span-3">
+              <label class="block text-sm font-medium text-gray-700 mb-1">Jenis Pelanggaran</label>
+              <select id="jenisPelanggaran"
+                class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-red-500"
+                required>
+                <option value="">-- Pilih Jenis --</option>
+              </select>
+            </div>
+            <div class="md:col-span-2">
+              <label class="block text-sm font-medium text-gray-700 mb-1">Poin</label>
+              <input type="number" id="poinPelanggaran"
+                class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-100 cursor-not-allowed" readonly
+                value="0">
+            </div>
+            <div class="md:col-span-12">
+              <label class="block text-sm font-medium text-gray-700 mb-1">Keterangan</label>
+              <textarea id="keteranganPelanggaran"
+                class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-500"
+                rows="2"></textarea>
+            </div>
+            <div class="md:col-span-12 text-end">
+              <button type="submit"
+                class="bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-6 rounded-lg shadow-sm">
+                ➕ Simpan Pelanggaran
+              </button>
+            </div>
+          </form>
+
+          <!-- FILTER -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 items-end">
+            <div>
+              <label class="block text-xs font-semibold text-gray-500 mb-1">Filter Kelas</label>
+              <select id="filterKelasPelanggaran"
+                class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-500">
+                <option value="">-- Semua Kelas --</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-gray-500 mb-1">Filter Siswa</label>
+              <select id="filterSiswaPelanggaran"
+                class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-500">
+                <option value="">-- Semua Siswa --</option>
+              </select>
+            </div>
+            <div class="flex gap-2">
+              <button id="btnCetakPerSiswa"
+                class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg text-sm w-1/2 flex items-center justify-center gap-2">
+                <i class="bi bi-printer"></i> Per Siswa
+              </button>
+              <button id="btnCetakPerKelas"
+                class="bg-gray-600 hover:bg-gray-700 text-white px-3 py-2 rounded-lg text-sm w-1/2 flex items-center justify-center gap-2">
+                <i class="bi bi-printer"></i> Per Kelas
+              </button>
+            </div>
+          </div>
+
+          <!-- TABEL REKAP -->
+          <div class="overflow-x-auto border rounded-xl shadow-sm">
+            <table class="w-full text-sm text-center" id="tabelPelanggaran">
+              <thead class="bg-red-100 text-red-800 uppercase text-xs">
+                <tr>
+                  <th class="px-4 py-3 border-b">Tanggal</th>
+                  <th class="px-4 py-3 border-b">Nama Siswa</th>
+                  <th class="px-4 py-3 border-b">Kelas</th>
+                  <th class="px-4 py-3 border-b">Jenis</th>
+                  <th class="px-4 py-3 border-b">Kategori</th>
+                  <th class="px-4 py-3 border-b">Poin</th>
+                  <th class="px-4 py-3 border-b">Keterangan</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-100 bg-white"></tbody>
+            </table>
+          </div>
+          <div id="pagPelanggaran" class="p-4 border-t border-gray-100 bg-gray-50"></div>
+        </div>
+      </div>
+    </section>
+
+
+
+  </div>
+
+  <!-- jsPDF UMD -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <!-- jsPDF AutoTable -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+  <!-- Integrasi File JS -->
+</body>
+
+</html>

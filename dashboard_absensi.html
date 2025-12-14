@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard Absensi Sekolah</title>
+  <link rel="stylesheet" href="./style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+
+<body class="bg-gray-50 text-gray-800 font-sans">
+
+  <!-- LOADING OVERLAY -->
+  <div id="loadingOverlay"
+    class="fixed inset-0 bg-gray-900 bg-opacity-60 z-[9999] flex flex-col items-center justify-center text-white transition-opacity duration-300">
+    <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-500 mb-4"></div>
+    <p class="animate-pulse font-medium">Memuat Data Absensi...</p>
+  </div>
+
+  <!-- LAYOUT CONTAINERS -->
+  <div id="navbar-container" class="fixed top-0 z-40 w-full"></div>
+  <div id="sidebar-container" class="fixed left-0 z-30 h-full hidden sm:block"></div>
+
+  <!-- MAIN CONTENT -->
+  <div id="main-content" class="p-6 mt-16 sm:ml-64 transition-all duration-300 opacity-0 transform translate-y-4">
+
+    <!-- HEADER -->
+    <div class="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-800">📊 Dashboard Absensi</h1>
+        <p class="text-gray-500 text-sm mt-1">Pantau kehadiran siswa secara real-time</p>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded border border-blue-400">
+          <i class="bi bi-clock-history"></i> Live Data
+        </span>
+        <span id="currentDate"
+          class="text-sm font-medium text-gray-600 bg-white px-3 py-1 rounded-lg border shadow-sm"></span>
+      </div>
+    </div>
+
+    <!-- FILTER SECTION -->
+    <section class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 mb-6">
+      <h6 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+        <i class="bi bi-funnel"></i> Filter Data
+      </h6>
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div>
+          <label class="block text-xs font-medium text-gray-500 mb-1">Tanggal</label>
+          <input id="filterTanggal" type="date"
+            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 transition-shadow" />
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-500 mb-1">Kelas</label>
+          <select id="filterKelas"
+            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 transition-shadow">
+            <option value="">Semua Kelas</option>
+            <!-- Options populated by JS ideally, but hardcoded for now matches existing -->
+            <option value="7A">7A</option>
+            <option value="7B">7B</option>
+            <option value="8A">8A</option>
+            <option value="9A">9A</option>
+            <option value="9B">9B</option>
+          </select>
+        </div>
+        <div class="md:col-span-2">
+          <label class="block text-xs font-medium text-gray-500 mb-1">Pencarian Siswa</label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+              <svg class="w-4 h-4 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none"
+                viewBox="0 0 20 20">
+                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z" />
+              </svg>
+            </div>
+            <input type="text" id="inputCari"
+              class="block w-full p-2.5 pl-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Cari nama siswa..." required>
+          </div>
+        </div>
+      </div>
+      <div class="flex flex-wrap gap-2 mt-4 justify-end">
+        <button id="btnExportPDF"
+          class="text-white bg-red-600 hover:bg-red-700 focus:ring-4 focus:ring-red-300 font-medium rounded-lg text-sm px-4 py-2 flex items-center gap-2 transition-transform transform active:scale-95">
+          <i class="bi bi-file-pdf"></i> Export PDF
+        </button>
+        <button id="btnExportExcel"
+          class="text-white bg-green-600 hover:bg-green-700 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-4 py-2 flex items-center gap-2 transition-transform transform active:scale-95">
+          <i class="bi bi-file-excel"></i> Export Excel
+        </button>
+      </div>
+    </section>
+
+    <!-- STATS CARDS -->
+    <div id="statistik" class="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+      <!-- Cards will be populated/styled here but keeping structural divs -->
+      <div
+        class="bg-white p-4 rounded-xl shadow-sm border border-l-4 border-green-500 flex flex-col justify-between hover:shadow-md transition-shadow">
+        <span class="text-xs font-medium text-gray-400 uppercase">Hadir</span>
+        <div class="flex items-center justify-between mt-2">
+          <h2 class="text-3xl font-bold text-gray-800" id="jmlHadir">0</h2>
+          <i class="bi bi-check-circle text-green-200 text-3xl"></i>
+        </div>
+      </div>
+      <div
+        class="bg-white p-4 rounded-xl shadow-sm border border-l-4 border-yellow-400 flex flex-col justify-between hover:shadow-md transition-shadow">
+        <span class="text-xs font-medium text-gray-400 uppercase">Izin</span>
+        <div class="flex items-center justify-between mt-2">
+          <h2 class="text-3xl font-bold text-gray-800" id="jmlIzin">0</h2>
+          <i class="bi bi-envelope-paper text-yellow-200 text-3xl"></i>
+        </div>
+      </div>
+      <div
+        class="bg-white p-4 rounded-xl shadow-sm border border-l-4 border-blue-500 flex flex-col justify-between hover:shadow-md transition-shadow">
+        <span class="text-xs font-medium text-gray-400 uppercase">Sakit</span>
+        <div class="flex items-center justify-between mt-2">
+          <h2 class="text-3xl font-bold text-gray-800" id="jmlSakit">0</h2>
+          <i class="bi bi-bandaid text-blue-200 text-3xl"></i>
+        </div>
+      </div>
+      <div
+        class="bg-white p-4 rounded-xl shadow-sm border border-l-4 border-red-500 flex flex-col justify-between hover:shadow-md transition-shadow">
+        <span class="text-xs font-medium text-gray-400 uppercase">Alfa</span>
+        <div class="flex items-center justify-between mt-2">
+          <h2 class="text-3xl font-bold text-gray-800" id="jmlAlfa">0</h2>
+          <i class="bi bi-x-circle text-red-200 text-3xl"></i>
+        </div>
+      </div>
+      <div
+        class="bg-white p-4 rounded-xl shadow-sm border border-l-4 border-orange-500 flex flex-col justify-between hover:shadow-md transition-shadow">
+        <span class="text-xs font-medium text-gray-400 uppercase">Terlambat</span>
+        <div class="flex items-center justify-between mt-2">
+          <h2 class="text-3xl font-bold text-gray-800" id="jmlTerlambat">0</h2>
+          <i class="bi bi-alarm text-orange-200 text-3xl"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- CHART SECTION -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
+      <h6 class="text-gray-700 font-bold mb-4 border-b pb-2">📈 Grafik Kehadiran</h6>
+      <div class="w-full h-64 md:h-80">
+        <canvas id="grafikKehadiran"></canvas>
+      </div>
+    </div>
+
+    <!-- TABLE SECTION -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      <div class="p-6 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+        <h6 class="text-gray-700 font-bold">📋 Data Absensi Lengkap</h6>
+        <span class="text-xs text-gray-500 bg-white border px-2 py-1 rounded shadow-sm">Realtime Update</span>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm text-left text-gray-600" id="tabelAbsensi">
+          <thead class="text-xs text-gray-700 uppercase bg-gray-100">
+            <tr>
+              <th scope="col" class="px-6 py-4 rounded-tl-lg">No</th>
+              <th scope="col" class="px-6 py-4">Nama</th>
+              <th scope="col" class="px-6 py-4">Kelas</th>
+              <th scope="col" class="px-6 py-4 text-center">Status</th>
+              <th scope="col" class="px-6 py-4">Keterangan</th>
+              <th scope="col" class="px-6 py-4 rounded-tr-lg">Waktu Check-in</th>
+            </tr>
+          </thead>
+          <tbody id="isiTabel" class="divide-y divide-gray-100">
+            <tr>
+              <td colspan="6" class="text-center py-8 text-gray-400 italic">Memuat data absensi...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <!-- Pagination logic if added later could go here -->
+      <div class="p-4 bg-gray-50 border-t border-gray-100 text-right text-xs text-gray-400">
+        Menampilkan data terbaru
+      </div>
+    </div>
+
+    <div id="rekapSiswa" class="hidden"></div> <!-- Keeping hidden container if needed by logic -->
+
+    <footer class="text-center text-xs text-gray-400 mt-8 mb-4">
+      © 2025 Sistem Absensi Sekolah. All rights reserved.
+    </footer>
+  </div>
+
+  <!-- MODAL DETAIL -->
+  <div id="modalDetail"
+    class="fixed inset-0 z-50 hidden bg-gray-900 bg-opacity-60 backdrop-blur-sm flex items-center justify-center p-4 transition-opacity duration-300">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-md transform scale-100 transition-all">
+      <div class="relative bg-gradient-to-r from-blue-600 to-blue-500 p-6 rounded-t-xl text-white">
+        <button id="closeModal" class="absolute top-4 right-4 text-white hover:text-gray-200 transition-colors">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="X6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+        <h2 id="detailNama" class="text-2xl font-bold">Nama Siswa</h2>
+        <p id="detailInfo" class="text-blue-100 text-sm mt-1">Kelas - Informasi detail</p>
+      </div>
+      <div class="p-6">
+        <h4 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3 text-center">Statistik Kehadiran
+        </h4>
+        <div class="h-48">
+          <canvas id="chartDetail"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  </footer>
+
+  <!-- Pisahkan JS -->
+  <script type="module" src="./src/js/dashboard_absensi.js"></script>
+</body>
+
+</html>

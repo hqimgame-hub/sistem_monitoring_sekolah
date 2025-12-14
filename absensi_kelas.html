@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Absensi Siswa - Scan QR</title>
+
+  <!-- Local CSS (Tailwind) -->
+  <link rel="stylesheet" href="./style.css">
+
+  <!-- JSQR Lib -->
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+
+  <!-- Icon -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+</head>
+
+<body class="bg-gray-50 flex flex-col items-center justify-center min-h-screen p-4 pb-24 font-sans text-gray-800">
+
+  <div class="w-full max-w-sm mx-auto mb-6 text-center">
+    <img src="assets/logo.png" alt="Logo Sekolah" class="mx-auto w-20 h-20 mb-4 object-contain drop-shadow-sm">
+    <h1 class="text-2xl font-bold text-gray-800">Scan Absensi</h1>
+    <p class="text-gray-500 text-sm mt-1">Arahkan kamera ke kartu QR siswa</p>
+  </div>
+
+  <div class="w-full max-w-sm mx-auto bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-6 transition-all">
+    <div class="flex justify-between items-center mb-3">
+      <div class="flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+        <p id="petugasLabel" class="text-xs font-semibold text-gray-600">Memuat Petugas...</p>
+      </div>
+      <button id="btnLogout"
+        class="hidden text-xs text-red-500 hover:bg-red-50 px-3 py-1.5 rounded transition-colors font-medium border border-red-200">
+        <i class="bi bi-box-arrow-right"></i> Logout
+      </button>
+    </div>
+
+    <div id="videoContainer" class="relative rounded-lg overflow-hidden bg-black aspect-square shadow-inner">
+      <video id="kamera" class="w-full h-full object-cover" autoplay playsinline></video>
+      <canvas id="kanvas" hidden></canvas>
+      <div
+        class="absolute inset-0 border-4 border-white/30 rounded-lg pointer-events-none flex items-center justify-center">
+        <div class="w-48 h-48 border-2 border-green-400/80 rounded-lg shadow-[0_0_20px_rgba(74,222,128,0.5)]"></div>
+      </div>
+      <div class="absolute bottom-4 left-0 right-0 text-center text-white/80 text-xs shadow-black drop-shadow-md">
+        Pastikan QR berada di dalam kotak
+      </div>
+    </div>
+  </div>
+
+  <div
+    class="flex flex-col items-center mb-6 text-sm text-gray-500 bg-white px-4 py-2 rounded-full shadow-sm border border-gray-100">
+    <span id="serverClock" class="font-mono flex items-center gap-2">
+      <i class="bi bi-clock"></i> <span>--:--:--</span>
+    </span>
+  </div>
+
+  <div id="hasil"
+    class="w-full max-w-sm mx-auto p-4 bg-white rounded-xl shadow-sm border border-gray-100 text-center transition-all opacity-0 transform translate-y-4">
+    <!-- Result content injected by JS -->
+  </div>
+
+  <div id="loadingOverlay"
+    class="hidden fixed inset-0 bg-gray-900 bg-opacity-70 backdrop-blur-sm flex flex-col items-center justify-center text-white z-50 transition-opacity">
+    <div class="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-blue-500 mb-4"></div>
+    <p class="font-medium animate-pulse">Memproses Data...</p>
+  </div>
+
+  <footer class="fixed bottom-4 text-xs text-gray-300 text-center w-full">
+    Sistem Absensi Sekolah &copy; 2025
+  </footer>
+
+  <script type="module" src="./src/js/absensi_kelas.js"></script>
+</body>
+
+</html>
