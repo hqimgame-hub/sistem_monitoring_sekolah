@@ -1371,7 +1371,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   // Download format templates
   if (btnDownloadGuruFormat) {
     btnDownloadGuruFormat.addEventListener("click", () => {
-      const data = [{ nama: "Budi Santoso", email: "budi@contoh.com", password: "12345678", mapel: "Matematika, IPA", role: "guru", waliKelas: "true", kelasWali: "7A" }];
+      const data = [{ nama: "Nama Guru", email: "guru@sekolah.sch.id", password: "12345678", mapel: "Matematika, IPA", role: "guru", waliKelas: "true", kelasWali: "7A" }];
       const ws = XLSX.utils.json_to_sheet(data);
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "format_guru");
@@ -1380,7 +1380,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   }
   if (btnDownloadSiswaFormat) {
     btnDownloadSiswaFormat.addEventListener("click", () => {
-      const data = [{ nama: "Andi", kelas: "7A", nis: "1001" }];
+      const data = [{ nama: "Nama Siswa", kelas: "7A", nis: "1001" }];
       const ws = XLSX.utils.json_to_sheet(data);
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "format_siswa");
