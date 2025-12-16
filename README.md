@@ -45,6 +45,12 @@ Aplikasi Sistem Informasi Sekolah berbasis web modern yang dibangun menggunakan 
     ```
     Akses aplikasi di `http://localhost:5173`.
 
+> [!IMPORTANT]
+> **PENTING UNTUK SEKOLAH LAIN**
+> Jika Anda menggunakan source code ini untuk sekolah Anda sendiri, Anda **WAJIB** mengganti konfigurasi Firebase di file `src/js/firebase_init.js` (atau `.env` jika sudah disetup) dengan konfigurasi Project Firebase milik sekolah Anda sendiri.
+> 
+> Jika Anda tidak menggantinya, aplikasi akan terhubung ke database demo/default dan data sekolah Anda akan bercampur dengan data orang lain. **Pastikan Anda membuat Project Firebase baru!**
+
 ## Deployment
 
 Aplikasi ini dapat dideploy dengan mudah ke platform statis seperti Vercel, Netlify, atau Firebase Hosting.
