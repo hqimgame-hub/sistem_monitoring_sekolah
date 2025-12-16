@@ -14,12 +14,12 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <script type="module" crossorigin src="/assets/dashboard_admin-C9fVwqJa.js"></script>
-  <link rel="modulepreload" crossorigin href="/assets/style-Cznge8x3.js">
+  <script type="module" crossorigin src="/assets/dashboard_admin-BkIsplio.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/style-Kwe7jDFC.js">
   <link rel="modulepreload" crossorigin href="/assets/firebase_init-IrZITGwD.js">
   <link rel="modulepreload" crossorigin href="/assets/Navbar-z9BVbuuM.js">
-  <link rel="modulepreload" crossorigin href="/assets/Sidebar-Ds6DUahJ.js">
-  <link rel="stylesheet" crossorigin href="/assets/style-BBFzvd_0.css">
+  <link rel="modulepreload" crossorigin href="/assets/Sidebar-lRZ-zoN3.js">
+  <link rel="stylesheet" crossorigin href="/assets/style-BxUjWff2.css">
 </head>
 
 <body class="bg-gray-100 text-gray-800 min-h-screen">
@@ -131,6 +131,34 @@
                 </tr>
               </thead>
               <tbody id="tableMapel" class="bg-gray-50 text-center"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- ========================= KELAS SECTION ========================= -->
+        <section id="sectionKelas" class="bg-white shadow-md rounded p-4 mb-6">
+          <h2 class="text-lg font-bold border-b-2 border-indigo-400 pb-1 mb-3">Data Kelas</h2>
+
+          <!-- Form Tambah Kelas -->
+          <form id="formKelas" class="flex flex-wrap gap-2 mb-4">
+            <input type="text" id="namaKelasInput" placeholder="Nama Kelas (ex: 7A)" class="border p-2 rounded flex-1"
+              required>
+            <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded">
+              ➕ Tambah Kelas
+            </button>
+          </form>
+
+          <!-- Daftar Kelas -->
+          <div class="overflow-x-auto">
+            <table class="min-w-full text-sm border border-gray-200 rounded">
+              <thead class="bg-indigo-500 text-white">
+                <tr>
+                  <th class="p-2 border">No</th>
+                  <th class="p-2 border">Nama Kelas</th>
+                  <th class="p-2 border text-center">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="tableKelas" class="bg-gray-50 text-center"></tbody>
             </table>
           </div>
         </section>
@@ -421,15 +449,26 @@
 
       <!-- Tabel -->
       <div class="overflow-x-auto shadow-md rounded-lg">
+        <div class="flex items-center gap-2 mb-2">
+          <button id="btnDeleteSelectedAbsensi" disabled
+            class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm items-center gap-2 opacity-50 cursor-not-allowed">
+            <i class="bi bi-trash"></i> Hapus Terpilih
+          </button>
+        </div>
+
         <table class="min-w-full bg-white border border-gray-200" id="tabelAbsensi">
           <thead class="bg-green-600 text-white">
             <tr>
+              <th class="py-2 px-3 text-center border">
+                <input type="checkbox" id="selectAllAbsensi" class="w-4 h-4 rounded">
+              </th>
               <th class="py-2 px-3 text-left">No</th>
               <th class="py-2 px-3 text-left">Nama</th>
               <th class="py-2 px-3 text-left">Kelas</th>
               <th class="py-2 px-3 text-left">Status</th>
               <th class="py-2 px-3 text-left">Keterangan</th>
               <th class="py-2 px-3 text-left">Waktu</th>
+              <th class="py-2 px-3 text-center">Aksi</th>
             </tr>
           </thead>
           <tbody id="isiTabelAbsensi" class="divide-y divide-gray-200">
@@ -602,6 +641,49 @@
       </form>
     </div>
   </div>
+
+  <!-- Modal Edit Mapel -->
+  <div id="modalEditMapel" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg p-6 w-96 shadow-lg">
+      <h3 class="text-lg font-semibold mb-4">Edit Mata Pelajaran</h3>
+      <form id="formEditMapel">
+        <input type="hidden" id="editMapelId">
+        <div class="mb-3">
+          <label class="block text-sm font-medium mb-1">Nama Mapel</label>
+          <input type="text" id="editMapelNama" class="border rounded w-full p-2" required>
+        </div>
+        <div class="mb-3">
+          <label class="block text-sm font-medium mb-1">Kode</label>
+          <input type="text" id="editMapelKode" class="border rounded w-full p-2">
+        </div>
+        <div class="flex justify-end space-x-2">
+          <button type="button" id="btnCloseEditMapel"
+            class="px-4 py-2 bg-gray-400 rounded text-white hover:bg-gray-500">Batal</button>
+          <button type="submit" class="px-4 py-2 bg-green-600 rounded text-white hover:bg-green-700">Simpan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Edit Kelas -->
+  <div id="modalEditKelas" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg p-6 w-96 shadow-lg">
+      <h3 class="text-lg font-semibold mb-4">Edit Kelas</h3>
+      <form id="formEditKelas">
+        <input type="hidden" id="editKelasId">
+        <div class="mb-3">
+          <label class="block text-sm font-medium mb-1">Nama Kelas</label>
+          <input type="text" id="editKelasNama" class="border rounded w-full p-2" required>
+        </div>
+        <div class="flex justify-end space-x-2">
+          <button type="button" id="btnCloseEditKelas"
+            class="px-4 py-2 bg-gray-400 rounded text-white hover:bg-gray-500">Batal</button>
+          <button type="submit" class="px-4 py-2 bg-indigo-600 rounded text-white hover:bg-indigo-700">Simpan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
 
 </body>
 

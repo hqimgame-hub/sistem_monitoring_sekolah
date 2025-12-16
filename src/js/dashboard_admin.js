@@ -441,8 +441,20 @@ window.addEventListener("DOMContentLoaded", async () => {
       }
 
       container.innerHTML = "";
+
+      let dataList = [];
       snap.forEach(docSnap => {
-        const data = docSnap.data();
+        dataList.push(docSnap.data());
+      });
+
+      // SORTING (Natural Sort)
+      dataList.sort((a, b) => {
+        const nameA = (a.namaKelas || a.name || "").toUpperCase();
+        const nameB = (b.namaKelas || b.name || "").toUpperCase();
+        return nameA.localeCompare(nameB, undefined, { numeric: true, sensitivity: 'base' });
+      });
+
+      dataList.forEach(data => {
         const label = document.createElement("label");
         label.className = "flex items-center space-x-2 p-1";
 
@@ -482,6 +494,9 @@ window.addEventListener("DOMContentLoaded", async () => {
         const nama = data.namaKelas || data.name || "";
         if (nama) kelasList.push(nama);
       });
+
+      // Sort natural (7A before 8A)
+      kelasList.sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
 
       // Isi semua dropdown yang terkait kelas
       const dropdownIds = ["kelasSiswa", "filterKelas", "filterAbsensiKelas", "editUserKelasWali"];
@@ -1626,8 +1641,16 @@ window.addEventListener("DOMContentLoaded", async () => {
     await loadSiswa(filterKelas?.value || "");
     await loadJenisPelanggaran();
     await loadAbsensi(filterAbsensiKelas?.value || "");
+    // Initial Load
+    await loadDropdownKelasGlobal();
+    await loadUsers(filterRole?.value || "");
+    await loadSiswa(filterKelas?.value || "");
+    await loadJenisPelanggaran();
+    await loadAbsensi(filterAbsensiKelas?.value || "");
     await tampilkanCheckboxMapel();
     await tampilkanCheckboxKelasDiajar();
+    await loadMapel(); // New
+    await loadKelas(); // New
   })();
 
   // -----------------------
@@ -1698,16 +1721,30 @@ window.addEventListener("DOMContentLoaded", async () => {
         const status = (d.status || "").toLowerCase();
         rows += `
         <tr class="border-b hover:bg-gray-50">
+          <td class="p-2 text-center">
+             <input type="checkbox" class="selectAbsensiCheckbox w-4 h-4 rounded" data-id="${d.id}">
+          </td>
           <td class="p-2 text-center">${no++}</td>
           <td class="p-2">${d.nama || "-"}</td>
           <td class="p-2">${d.kelas || "-"}</td>
           <td class="p-2 capitalize">${status}</td>
           <td class="p-2">${d.keterangan || "-"}</td>
           <td class="p-2">${d.tanggal || d.waktu || "-"}</td>
+          <td class="p-2 text-center">
+            <button class="px-2 py-1 bg-red-500 text-white rounded delAbsensiBtn" data-id="${d.id}">Hapus</button>
+          </td>
         </tr>`;
       });
 
       tbody.innerHTML = rows;
+
+      // Attach events for delete single
+      tbody.querySelectorAll(".delAbsensiBtn").forEach(btn => {
+        btn.addEventListener("click", () => hapusAbsensi(btn.dataset.id));
+      });
+
+      // Update checkbox Select All visibility logic handling
+      updateAbsensiBulkUI();
 
       // Render pagination
       const pagination = document.getElementById("paginationAbsensi");
@@ -1866,7 +1903,14 @@ window.addEventListener("DOMContentLoaded", async () => {
       else if (s.includes("izin")) count.izin++;
       else if (s.includes("sakit")) count.sakit++;
       else if (s.includes("alfa")) count.alfa++;
-      if (d.keterangan && d.keterangan.toLowerCase().includes("terlambat")) count.terlambat++;
+      if (s.includes("alfa")) count.alfa++;
+
+      // Hitung terlambat HANYA jika tanggalnya HARI INI
+      const today = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD
+      const docDate = (d.tanggal || "").split("T")[0];
+      if (docDate === today && d.keterangan && d.keterangan.toLowerCase().includes("terlambat")) {
+        count.terlambat++;
+      }
     });
 
     if (jmlHadir) jmlHadir.textContent = count.hadir;
@@ -2076,6 +2120,331 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   // Expose to window for sidebar
   window.loadJenisPelanggaran = loadJenisPelanggaran;
+
+  // ============================================
+  // ABSENSI BULK DELETE & SINGLE DELETE
+  // ============================================
+  const btnDeleteSelectedAbsensi = document.getElementById("btnDeleteSelectedAbsensi");
+  const selectAllAbsensi = document.getElementById("selectAllAbsensi");
+
+  function updateAbsensiBulkUI() {
+    const anyChecked = document.querySelectorAll(".selectAbsensiCheckbox:checked").length > 0;
+    if (btnDeleteSelectedAbsensi) {
+      if (anyChecked) {
+        btnDeleteSelectedAbsensi.removeAttribute('disabled');
+        btnDeleteSelectedAbsensi.classList.remove("opacity-50", "cursor-not-allowed");
+        btnDeleteSelectedAbsensi.classList.remove("hidden"); // Ensure visible
+      } else {
+        btnDeleteSelectedAbsensi.setAttribute('disabled', 'true');
+        btnDeleteSelectedAbsensi.classList.add("opacity-50", "cursor-not-allowed");
+        btnDeleteSelectedAbsensi.classList.remove("hidden"); // Ensure visible
+      }
+    }
+  }
+
+  // Delegate event for checkboxes to update UI
+  const tableAbsensiEl = document.getElementById("tabelAbsensi");
+  if (tableAbsensiEl) {
+    tableAbsensiEl.addEventListener("change", (e) => {
+      if (e.target.classList.contains("selectAbsensiCheckbox")) {
+        updateAbsensiBulkUI();
+      }
+    });
+  }
+
+  if (selectAllAbsensi) {
+    selectAllAbsensi.addEventListener("change", () => {
+      const all = document.querySelectorAll(".selectAbsensiCheckbox");
+      all.forEach(cb => cb.checked = selectAllAbsensi.checked);
+      updateAbsensiBulkUI();
+    });
+  }
+
+  if (btnDeleteSelectedAbsensi) {
+    btnDeleteSelectedAbsensi.addEventListener("click", async () => {
+      const checked = Array.from(document.querySelectorAll(".selectAbsensiCheckbox:checked"))
+        .map(cb => cb.dataset.id);
+
+      if (!checked.length) return toast("Tidak ada data absensi yang dipilih", "bg-yellow-600");
+      if (!confirm(`Yakin ingin menghapus ${checked.length} data absensi?`)) return;
+
+      showLoading(true);
+      try {
+        for (const id of checked) {
+          await deleteDoc(doc(db, "absensi", id));
+        }
+        toast(`🗑️ ${checked.length} data absensi dihapus`, "bg-green-600");
+        await loadAbsensi(currentPageAbsensi, document.getElementById("limitAbsensi")?.value || "10");
+        if (selectAllAbsensi) selectAllAbsensi.checked = false;
+        updateAbsensiBulkUI();
+      } catch (err) {
+        console.error(err);
+        toast("Gagal hapus data absensi", "bg-red-600");
+      } finally {
+        showLoading(false);
+      }
+    });
+  }
+
+  async function hapusAbsensi(id) {
+    if (!confirm("Hapus data absensi ini?")) return;
+    try {
+      await deleteDoc(doc(db, "absensi", id));
+      toast("Data absensi dihapus", "bg-green-600");
+      await loadAbsensi(currentPageAbsensi, document.getElementById("limitAbsensi")?.value || "10");
+    } catch (err) {
+      console.error(err);
+      toast("Gagal menghapus data absensi", "bg-red-600");
+    }
+  }
+
+
+  // ============================================
+  // MAPEL CRUD LOGIC
+  // ============================================
+  const formMapel = document.getElementById("formMapel");
+  const tableMapel = document.getElementById("tableMapel");
+
+  // Modal Edit Mapel
+  const modalEditMapel = document.getElementById("modalEditMapel");
+  const formEditMapel = document.getElementById("formEditMapel");
+  const editMapelId = document.getElementById("editMapelId");
+  const editMapelNama = document.getElementById("editMapelNama");
+  const editMapelKode = document.getElementById("editMapelKode");
+  const btnCloseEditMapel = document.getElementById("btnCloseEditMapel");
+
+  if (btnCloseEditMapel) btnCloseEditMapel.addEventListener("click", () => modalEditMapel.classList.add("hidden"));
+
+  async function loadMapel() {
+    if (!tableMapel) return;
+    tableMapel.innerHTML = '<tr><td colspan="4" class="p-3 text-gray-400">⏳ Memuat mapel...</td></tr>';
+    try {
+      const snap = await getDocs(collection(db, "mapel"));
+      if (snap.empty) {
+        tableMapel.innerHTML = '<tr><td colspan="4" class="p-3 text-gray-500 italic">Belum ada mapel</td></tr>';
+        return;
+      }
+      tableMapel.innerHTML = "";
+      let no = 1;
+      snap.forEach(docSnap => {
+        const d = docSnap.data();
+        const tr = document.createElement("tr");
+        tr.className = "border-b hover:bg-gray-50";
+        tr.innerHTML = `
+           <td class="p-2">${no++}</td>
+           <td class="p-2 text-left">${d.nama || "-"}</td>
+           <td class="p-2">${d.kode || "-"}</td>
+           <td class="p-2 space-x-1">
+             <button class="px-2 py-1 bg-yellow-500 text-white rounded text-xs hover:bg-yellow-600 btnEditMapel" data-id="${docSnap.id}" data-nama="${d.nama}" data-kode="${d.kode || ''}">Edit</button>
+             <button class="px-2 py-1 bg-red-500 text-white rounded text-xs hover:bg-red-600 btnDelMapel" data-id="${docSnap.id}">Hapus</button>
+           </td>
+         `;
+        tableMapel.appendChild(tr);
+      });
+
+      // Events
+      tableMapel.querySelectorAll(".btnEditMapel").forEach(btn => {
+        btn.addEventListener("click", () => {
+          editMapelId.value = btn.dataset.id;
+          editMapelNama.value = btn.dataset.nama;
+          editMapelKode.value = btn.dataset.kode;
+          modalEditMapel.classList.remove("hidden");
+        });
+      });
+      tableMapel.querySelectorAll(".btnDelMapel").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          if (!confirm("Hapus mapel ini?")) return;
+          try {
+            await deleteDoc(doc(db, "mapel", btn.dataset.id));
+            toast("Mapel dihapus", "bg-green-600");
+            await loadMapel();
+            await tampilkanCheckboxMapel(); // Refresh checkboxes on Add Account form
+          } catch (e) {
+            console.error(e);
+            toast("Gagal hapus mapel", "bg-red-600");
+          }
+        });
+      });
+    } catch (err) {
+      console.error(err);
+      tableMapel.innerHTML = '<tr><td colspan="4" class="text-red-500">Gagal memuat</td></tr>';
+    }
+  }
+
+  if (formMapel) {
+    formMapel.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const nama = document.getElementById("namaMapel")?.value.trim();
+      const kode = document.getElementById("kodeMapel")?.value.trim() || "";
+      if (!nama) return;
+      showLoading(true);
+      try {
+        await addDoc(collection(db, "mapel"), { nama, kode, dibuatPada: new Date().toISOString() });
+        toast("Mapel ditambahkan", "bg-green-600");
+        formMapel.reset();
+        await loadMapel();
+        await tampilkanCheckboxMapel();
+      } catch (err) {
+        console.error(err);
+        toast("Gagal menambah mapel", "bg-red-600");
+      } finally {
+        showLoading(false);
+      }
+    });
+  }
+
+  if (formEditMapel) {
+    formEditMapel.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const id = editMapelId.value;
+      const nama = editMapelNama.value.trim();
+      const kode = editMapelKode.value.trim();
+      if (!nama) return;
+      showLoading(true);
+      try {
+        await updateDoc(doc(db, "mapel", id), { nama, kode });
+        toast("Mapel diperbarui", "bg-green-600");
+        modalEditMapel.classList.add("hidden");
+        await loadMapel();
+        await tampilkanCheckboxMapel();
+      } catch (err) {
+        console.error(err);
+        toast("Gagal update mapel", "bg-red-600");
+      } finally {
+        showLoading(false);
+      }
+    });
+  }
+
+  // ============================================
+  // KELAS CRUD LOGIC (Sorted)
+  // ============================================
+  const formKelas = document.getElementById("formKelas");
+  const tableKelas = document.getElementById("tableKelas");
+
+  const modalEditKelas = document.getElementById("modalEditKelas");
+  const formEditKelas = document.getElementById("formEditKelas");
+  const editKelasId = document.getElementById("editKelasId");
+  const editKelasNama = document.getElementById("editKelasNama");
+  const btnCloseEditKelas = document.getElementById("btnCloseEditKelas");
+
+  if (btnCloseEditKelas) btnCloseEditKelas.addEventListener("click", () => modalEditKelas.classList.add("hidden"));
+
+  // Sorter Function
+  function sortKelas(a, b) {
+    const nameA = (a.namaKelas || "").toUpperCase();
+    const nameB = (b.namaKelas || "").toUpperCase();
+    // Numeric aware sorting (7A comes before 7B, 10 before 11)
+    return nameA.localeCompare(nameB, undefined, { numeric: true, sensitivity: 'base' });
+  }
+
+  async function loadKelas() {
+    if (!tableKelas) return;
+    tableKelas.innerHTML = '<tr><td colspan="3" class="p-3 text-gray-400">⏳ Memuat kelas...</td></tr>';
+    try {
+      const snap = await getDocs(collection(db, "kelas"));
+      if (snap.empty) {
+        tableKelas.innerHTML = '<tr><td colspan="3" class="p-3 text-gray-500 italic">Belum ada kelas</td></tr>';
+        return;
+      }
+
+      let data = [];
+      snap.forEach(docSnap => {
+        data.push({ id: docSnap.id, ...docSnap.data() });
+      });
+
+      // SORTING
+      data.sort(sortKelas);
+
+      tableKelas.innerHTML = "";
+      let no = 1;
+      data.forEach(d => {
+        const tr = document.createElement("tr");
+        tr.className = "border-b hover:bg-gray-50";
+        tr.innerHTML = `
+           <td class="p-2">${no++}</td>
+           <td class="p-2 font-medium">${d.namaKelas || "-"}</td>
+           <td class="p-2 space-x-1">
+             <button class="px-2 py-1 bg-indigo-500 text-white rounded text-xs hover:bg-indigo-600 btnEditKelas" data-id="${d.id}" data-nama="${d.namaKelas}">Edit</button>
+             <button class="px-2 py-1 bg-red-500 text-white rounded text-xs hover:bg-red-600 btnDelKelas" data-id="${d.id}">Hapus</button>
+           </td>
+         `;
+        tableKelas.appendChild(tr);
+      });
+
+      // Events
+      tableKelas.querySelectorAll(".btnEditKelas").forEach(btn => {
+        btn.addEventListener("click", () => {
+          editKelasId.value = btn.dataset.id;
+          editKelasNama.value = btn.dataset.nama;
+          modalEditKelas.classList.remove("hidden");
+        });
+      });
+      tableKelas.querySelectorAll(".btnDelKelas").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          if (!confirm("Hapus kelas ini?")) return;
+          try {
+            await deleteDoc(doc(db, "kelas", btn.dataset.id));
+            toast("Kelas dihapus", "bg-green-600");
+            await loadKelas();
+            await loadDropdownKelasGlobal(); // Update global dropdowns
+            await tampilkanCheckboxKelasDiajar(); // Update user form
+          } catch (e) {
+            console.error(e);
+            toast("Gagal hapus kelas", "bg-red-600");
+          }
+        });
+      });
+    } catch (err) {
+      console.error(err);
+      tableKelas.innerHTML = '<tr><td colspan="3" class="text-red-500">Gagal memuat</td></tr>';
+    }
+  }
+
+  if (formKelas) {
+    formKelas.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const namaKelas = document.getElementById("namaKelasInput")?.value.trim();
+      if (!namaKelas) return;
+      showLoading(true);
+      try {
+        await addDoc(collection(db, "kelas"), { namaKelas, dibuatPada: new Date().toISOString() });
+        toast("Kelas ditambahkan", "bg-green-600");
+        document.getElementById("namaKelasInput").value = "";
+        await loadKelas();
+        await loadDropdownKelasGlobal();
+        await tampilkanCheckboxKelasDiajar();
+      } catch (err) {
+        console.error(err);
+        toast("Gagal menambah kelas", "bg-red-600");
+      } finally {
+        showLoading(false);
+      }
+    });
+  }
+
+  if (formEditKelas) {
+    formEditKelas.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const id = editKelasId.value;
+      const namaKelas = editKelasNama.value.trim();
+      if (!namaKelas) return;
+      showLoading(true);
+      try {
+        await updateDoc(doc(db, "kelas", id), { namaKelas });
+        toast("Kelas diperbarui", "bg-green-600");
+        modalEditKelas.classList.add("hidden");
+        await loadKelas();
+        await loadDropdownKelasGlobal();
+        await tampilkanCheckboxKelasDiajar();
+      } catch (err) {
+        console.error(err);
+        toast("Gagal update kelas", "bg-red-600");
+      } finally {
+        showLoading(false);
+      }
+    });
+  }
 
 }); // end DOMContentLoaded
 

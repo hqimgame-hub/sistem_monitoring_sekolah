@@ -259,11 +259,25 @@
 
         <!-- Body -->
         <div class="p-6 overflow-y-auto bg-gray-50 flex-1">
-          <div id="modalContent" class="space-y-4">
-            <!-- Content injected by JS -->
-            <div class="flex justify-center py-8">
-              <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <!-- Charts Row -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-100 flex flex-col items-center">
+              <h5 class="text-sm font-bold text-gray-700 mb-3">Statistik Kehadiran</h5>
+              <div class="h-48 w-full flex justify-center">
+                <canvas id="chartDetailAbsensi"></canvas>
+              </div>
             </div>
+            <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-100 flex flex-col items-center">
+              <h5 class="text-sm font-bold text-gray-700 mb-3">Statistik Pelanggaran</h5>
+              <div class="h-48 w-full flex justify-center">
+                <canvas id="chartDetailPelanggaran"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <!-- Detail Text -->
+          <div id="detailContent" class="space-y-4">
+            <!-- Content injected by JS -->
           </div>
         </div>
 

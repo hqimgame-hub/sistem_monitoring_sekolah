@@ -7,8 +7,8 @@ export function renderSidebar(menuItems) {
   const menuHtml = menuItems.map((item, index) => `
     <li>
        <a href="#" id="${item.id}" class="flex items-center p-2 text-white rounded-lg hover:bg-blue-500 group transition-colors duration-200">
-          ${item.icon || '<svg class="w-5 h-5 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white" fill="currentColor" viewBox="0 0 20 20"><path d="M2 10a8 8 0 1116 0 8 8 0 01-16 0z"/></svg>'}
-          <span class="ms-3 font-medium">${item.label}</span>
+          ${item.icon || '<svg class="w-5 h-5 text-white transition duration-75 group-hover:text-gray-200" fill="currentColor" viewBox="0 0 20 20"><path d="M2 10a8 8 0 1116 0 8 8 0 01-16 0z"/></svg>'}
+          <span class="ms-3 font-medium text-white">${item.label}</span>
        </a>
     </li>
   `).join('');
@@ -71,13 +71,15 @@ export function renderSidebar(menuItems) {
       el.addEventListener('click', (e) => {
         e.preventDefault();
 
-        // Remove active class from all
+        // Reset all to base state
         document.querySelectorAll('#logo-sidebar a').forEach(a => {
-          a.classList.remove('bg-blue-800', 'text-white');
+          a.classList.remove('bg-blue-800');
+          a.classList.add('text-white'); // Force white text
         });
 
-        // Add active class to clicked
-        el.classList.add('bg-blue-800', 'text-white');
+        // Add active state
+        el.classList.add('bg-blue-800');
+        el.classList.add('text-white'); // Ensure active is also white
 
         // Execute callback
         if (item.onClick) item.onClick(e);

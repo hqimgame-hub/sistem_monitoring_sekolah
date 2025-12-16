@@ -86,13 +86,28 @@ function switchView(viewName) {
   Object.values(views).forEach(el => el && el.classList.add('hidden'));
   if (views[viewName]) views[viewName].classList.remove('hidden');
 
+  // Toggle Visibility "Filter Siswa"
+  // Jika sedang di tab "catatan", sembunyikan dropdown filter siswa karena catatan level kelas
+  if (viewName === 'catatan') {
+    if (filterSiswaEl && filterSiswaEl.parentElement) {
+      filterSiswaEl.parentElement.classList.add('hidden');
+    }
+  } else {
+    // Tampilkan kembali untuk absensi / pelanggaran
+    if (filterSiswaEl && filterSiswaEl.parentElement) {
+      filterSiswaEl.parentElement.classList.remove('hidden');
+    }
+  }
+
   // Re-render needed charts if visible
   if (viewName === 'absensi') {
     renderAbsensiChart();
     renderTrenAbsensiMingguan();
+    renderTableAbsensi(); // pastikan tabel refresh juga
   } else if (viewName === 'pelanggaran') {
     renderPelanggaranChart();
     renderTrenPelanggaranMingguan();
+    renderTablePelanggaran();
   } else if (viewName === 'catatan') {
     renderTableCatatan();
   }
@@ -142,17 +157,40 @@ function fillSiswa(kelas = "") {
 function renderTableAbsensi() {
   const kelas = filterKelasEl.value;
   const siswa = filterSiswaEl.value;
+  const tStart = filterTanggalMulai.value;
+  const tEnd = filterTanggalAkhir.value;
+  const keyword = (inputCari.value || "").toLowerCase();
+
   const body = document.getElementById("bodyAbsensi");
   const pagDiv = document.getElementById("pagAbsensi");
 
   let rows = absensiList.filter(a => {
+    // 1. Filter Kelas
     if (kelas && a.kelas !== kelas) return false;
+
+    // 2. Filter Siswa
     if (siswa && a.nama !== siswa) return false;
+
+    // 3. Filter Tanggal
+    if (tStart || tEnd) {
+      const d = a.waktu?.toDate ? a.waktu.toDate() : (a.waktu ? new Date(a.waktu) : null);
+      if (!d) return false;
+      const iso = d.toISOString().split("T")[0];
+      if (tStart && iso < tStart) return false;
+      if (tEnd && iso > tEnd) return false;
+    }
+
+    // 4. Filter Keyword (Nama, Status, Keterangan)
+    if (keyword) {
+      const txt = (a.nama + " " + (a.status || "") + " " + (a.keterangan || "")).toLowerCase();
+      if (!txt.includes(keyword)) return false;
+    }
+
     return true;
   });
 
   if (rows.length === 0) {
-    body.innerHTML = `<tr><td colspan="6" class="text-center text-muted py-4">Tidak ada data</td></tr>`;
+    body.innerHTML = `<tr><td colspan="6" class="text-center text-muted py-4">Tidak ada data sesuai filter</td></tr>`;
     if (pagDiv) pagDiv.innerHTML = "";
     return;
   }
@@ -171,7 +209,7 @@ function renderTableAbsensi() {
     const t = a.waktu?.toDate ? a.waktu.toDate() : (a.waktu ? new Date(a.waktu) : null);
     const waktuStr = t ? t.toLocaleString("id-ID") : "-";
     body.innerHTML += `
-      <tr class="bg-white border-b hover:bg-gray-50">
+      <tr class="bg-white border-b hover:bg-gray-50 cursor-pointer" onclick="showDetail('${a.nama}')">
         <td class="px-6 py-4">${start + i + 1}</td>
         <td class="px-6 py-4 font-medium text-gray-900">${a.nama}</td>
         <td class="px-6 py-4">${a.kelas || "-"}</td>
@@ -199,18 +237,42 @@ function renderTableAbsensi() {
 function renderTablePelanggaran() {
   const kelas = filterKelasEl.value;
   const siswa = filterSiswaEl.value;
+  const tStart = filterTanggalMulai.value;
+  const tEnd = filterTanggalAkhir.value;
+  const keyword = (inputCari.value || "").toLowerCase();
+
   const body = document.getElementById("bodyPelanggaran");
   const pagDiv = document.getElementById("pagPelanggaran");
 
   let rows = pelanggaranList.filter(p => {
+    // 1. Filter Kelas
     if (kelas && p.kelas !== kelas) return false;
+
+    // 2. Filter Siswa
     const n = p.namaSiswa || p.nama || "Unidentified";
     if (siswa && n !== siswa) return false;
+
+    // 3. Filter Tanggal
+    if (tStart || tEnd) {
+      // Prioritaskan p.tanggal, fallback ke createdAt jika ada
+      const d = p.tanggal?.toDate ? p.tanggal.toDate() : (p.tanggal ? new Date(p.tanggal) : null);
+      if (!d) return false;
+      const iso = d.toISOString().split("T")[0];
+      if (tStart && iso < tStart) return false;
+      if (tEnd && iso > tEnd) return false;
+    }
+
+    // 4. Filter Keyword
+    if (keyword) {
+      const txt = (n + " " + (p.jenis || "") + " " + (p.keterangan || "")).toLowerCase();
+      if (!txt.includes(keyword)) return false;
+    }
+
     return true;
   });
 
   if (rows.length === 0) {
-    body.innerHTML = `<tr><td colspan="7" class="text-center text-muted py-4">Tidak ada data</td></tr>`;
+    body.innerHTML = `<tr><td colspan="7" class="text-center text-muted py-4">Tidak ada pelanggaran sesuai filter</td></tr>`;
     if (pagDiv) pagDiv.innerHTML = "";
     return;
   }
@@ -238,7 +300,7 @@ function renderTablePelanggaran() {
     const namaSiswa = p.namaSiswa || p.nama || "Unidentified";
     const total = totalPoin[namaSiswa] || 0;
 
-    // color by total points thresholds — ubah threshold sesuai kebijakan
+    // color by total points thresholds
     let kelasRow = "bg-white border-b hover:bg-gray-50";
     let textClass = "text-gray-500";
 
@@ -275,14 +337,22 @@ function renderTableCatatan() {
   if (!body) return; // if view not ready
 
   const kelas = filterKelasEl.value;
-  // Catatan biasanya per kelas, tidak per siswa, tapi bisa di filter
+  const keyword = (inputCari.value || "").toLowerCase();
+
+  // Catatan biasanya per kelas
   let rows = catatanList.filter(c => {
     if (kelas && c.kelas !== kelas) return false;
+
+    // Filter keyword (Guru, Catatan)
+    if (keyword) {
+      const txt = (c.guru + " " + (c.catatan || "")).toLowerCase();
+      if (!txt.includes(keyword)) return false;
+    }
     return true;
   });
 
   if (rows.length === 0) {
-    body.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-4">Tidak ada catatan</td></tr>`;
+    body.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-4">Tidak ada catatan sesuai filter</td></tr>`;
     return;
   }
 
@@ -577,30 +647,68 @@ function renderTrenPelanggaranMingguan() {
 
 
 /* show modal detail for a student */
+let chartDetailAbs = null;
+let chartDetailPel = null;
+
 function showDetail(nama) {
   modalTitle.textContent = `Detail: ${nama}`;
   const a = absensiList.filter(x => x.nama === nama);
-  const p = pelanggaranList.filter(x => x.nama === nama);
+  const p = pelanggaranList.filter(x => (x.namaSiswa || x.nama) === nama);
   const c = catatanList.filter(x => x.nama === nama);
 
-  let html = `<h6>Rekap Kehadiran (${a.length})</h6><ul>`;
+  // 1. Render List Content
+  let html = `<div class="bg-white rounded border border-gray-200 p-4 mb-4">
+    <h6 class="font-bold border-b pb-2 mb-2 text-blue-700">Riwayat Kehadiran (${a.length})</h6>
+    <ul class="text-sm space-y-1 max-h-40 overflow-y-auto">`;
+
+  if (a.length === 0) html += `<li class="text-gray-400 italic">Tidak ada data kehadiran</li>`;
   a.slice(0, 100).forEach(it => {
     const waktu = it.waktu?.toDate ? it.waktu.toDate().toLocaleString("id-ID") : (it.waktu ? new Date(it.waktu).toLocaleString() : '-');
-    html += `<li>${waktu} — ${it.status || 'Hadir'} ${it.keterangan ? '- ' + it.keterangan : ''}</li>`;
+    // color badge
+    const st = it.status || 'Hadir';
+    let color = 'text-green-600';
+    if (st.includes('Izin')) color = 'text-yellow-600';
+    if (st.includes('Sakit')) color = 'text-orange-600';
+    if (st.includes('Alfa')) color = 'text-red-600';
+
+    html += `<li class="flex justify-between border-b border-gray-100 last:border-0 pb-1">
+      <span>${waktu}</span>
+      <span class="font-medium ${color}">${st} ${it.keterangan ? ' (' + it.keterangan + ')' : ''}</span>
+    </li>`;
   });
-  html += `</ul><h6 class="mt-3">Pelanggaran (${p.length})</h6><ul>`;
+  html += `</ul></div>`;
+
+  html += `<div class="bg-white rounded border border-gray-200 p-4 mb-4">
+    <h6 class="font-bold border-b pb-2 mb-2 text-red-700">Riwayat Pelanggaran (${p.length})</h6>
+    <ul class="text-sm space-y-1 max-h-40 overflow-y-auto">`;
+
+  if (p.length === 0) html += `<li class="text-gray-400 italic">Tidak ada pelanggaran</li>`;
   p.slice(0, 100).forEach(it => {
     const t = it.tanggal?.toDate ? it.tanggal.toDate().toLocaleString("id-ID") : (it.tanggal ? new Date(it.tanggal).toLocaleString() : '-');
-    html += `<li>${t} — ${it.jenis || it.jenis_pelanggaran || '-'} ${it.poin ? ' (' + it.poin + ' poin)' : ''} ${it.keterangan ? '- ' + it.keterangan : ''}</li>`;
+    html += `<li class="flex justify-between border-b border-gray-100 last:border-0 pb-1">
+      <span>${t}</span>
+      <span class="font-medium text-red-600">${it.jenis || it.jenis_pelanggaran || '-'} <small class="text-gray-500">(${it.poin || 0} pts)</small></span>
+    </li>`;
   });
-  html += `</ul><h6 class="mt-3">Catatan Guru (${c.length})</h6><ul>`;
+  html += `</ul></div>`;
+
+  html += `<div class="bg-white rounded border border-gray-200 p-4">
+    <h6 class="font-bold border-b pb-2 mb-2 text-purple-700">Catatan Guru (${c.length})</h6>
+    <ul class="text-sm space-y-1 max-h-40 overflow-y-auto">`;
+  if (c.length === 0) html += `<li class="text-gray-400 italic">Tidak ada catatan</li>`;
   c.slice(0, 100).forEach(it => {
-    html += `<li><b>${it.guru || 'Guru'}</b>: ${it.catatan || '-'} <small class="text-muted">${it.tanggal || ''}</small></li>`;
+    html += `<li><span class="font-bold">${it.guru || 'Guru'}</span>: ${it.catatan || '-'} <small class="text-muted block">${it.tanggal || ''}</small></li>`;
   });
-  html += `</ul>`;
+  html += `</ul></div>`;
+
   detailContent.innerHTML = html;
 
-  // Calculate stats for chart
+  // Show modal first to ensure canvas dimensions
+  document.getElementById('modalDetail').classList.remove('hidden');
+
+  // 2. Render Charts
+
+  // -- Chart Absensi --
   let hadir = 0, izin = 0, sakit = 0, alfa = 0, terl = 0;
   a.forEach(at => {
     const st = (at.status || "").toLowerCase();
@@ -608,39 +716,85 @@ function showDetail(nama) {
     else if (st.includes("sakit")) sakit++;
     else if (st.includes("alfa")) alfa++;
     else hadir++;
-
     if ((at.keterangan || "").toLowerCase().includes("terlambat")) terl++;
   });
 
-  // Show modal (remove hidden class)
-  document.getElementById('modalDetail').classList.remove('hidden');
+  const ctxAbs = document.getElementById('chartDetailAbsensi');
+  if (chartDetailAbs) chartDetailAbs.destroy();
 
-  // small doughnut
-  // DOUGHNUT KECIL (Detail per Siswa)
-  if (chartDetail) chartDetail.destroy();
-  chartDetail = new Chart(chartDetailCanvas, {
-    type: "doughnut",
-    data: {
-      labels: ["Hadir", "Izin", "Sakit", "Alfa", "Terlambat"],
-      datasets: [{
-        data: [hadir, izin, sakit, alfa, terl],
-        backgroundColor: [
-          "#6EC1E4", "#F7B801", "#F35B04", "#D7263D", "#2E86AB"
-        ],
-        borderWidth: 2,
-        borderColor: "#fff",
-        hoverOffset: 6
-      }]
-    },
-    options: {
-      cutout: "60%",
-      plugins: {
-        legend: { position: "bottom" }
+  if (a.length > 0) {
+    chartDetailAbs = new Chart(ctxAbs, {
+      type: "doughnut",
+      data: {
+        labels: ["Hadir", "Izin", "Sakit", "Alfa"],
+        datasets: [{
+          data: [hadir, izin, sakit, alfa],
+          backgroundColor: ["#6EC1E4", "#F7B801", "#F35B04", "#D7263D"],
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } } }
       }
-    }
-  });
+    });
+  } else {
+    // Render empty state or clear
+    ctxAbs.closest('.h-48').innerHTML = '<p class="text-center text-gray-400 text-xs mt-10">Belum ada data</p>';
+  }
 
+  // -- Chart Pelanggaran --
+  const aggP = {};
+  p.forEach(it => {
+    const k = it.jenis || it.jenis_pelanggaran || "Lainnya";
+    aggP[k] = (aggP[k] || 0) + 1;
+  });
+  const labelsP = Object.keys(aggP);
+  const dataP = Object.values(aggP);
+
+  const ctxPel = document.getElementById('chartDetailPelanggaran');
+  // recreate canvas container if overwritten by 'Belum ada data' previously? 
+  // Should ideally check context integrity. simpler to just let it be or reset html if needed.
+  // For safety, let's reset the container content if we destroyed it previously?
+  // Easier: if p.length > 0 ensure canvas exists.
+
+  if (chartDetailPel) chartDetailPel.destroy();
+
+  if (p.length > 0) {
+    chartDetailPel = new Chart(ctxPel, {
+      type: "pie",
+      data: {
+        labels: labelsP,
+        datasets: [{
+          data: dataP,
+          backgroundColor: ["#FF6B6B", "#4D96FF", "#FFD93D", "#6BCB77", "#9D4EDD"],
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } } }
+      }
+    });
+  } else {
+    // Show empty message
+    const parent = ctxPel.parentElement;
+    parent.innerHTML = '<p class="text-center text-gray-400 text-xs mt-10">Tidak ada pelanggaran</p>';
+    // We lost the canvas, so next time need to re-add it? 
+    // Ideally we should have cleaner logic but this works for now if we assume modal resets on reload.
+    // Better: Restore canvas on empty state cleanup? No, showDetail called repeatedly.
+    // Fix: We should check if canvas exists, if not recreate it.
+  }
 }
+// Self-repair canvas for next calls if we replaced it with text?
+// Hack: always reset innerHTML of the chart containers at start of showDetail
+function resetChartContainers() {
+  document.getElementById('chartDetailAbsensi').parentElement.innerHTML = '<canvas id="chartDetailAbsensi"></canvas>';
+  document.getElementById('chartDetailPelanggaran').parentElement.innerHTML = '<canvas id="chartDetailPelanggaran"></canvas>';
+}
+// Add this call at start of showDetail
+const _origShowDetail = showDetail;
+showDetail = function (n) { resetChartContainers(); _origShowDetail(n); };
 
 /* exports (Excel / PDF) for current filtered table */
 function gatherRowsFromTables() {
@@ -821,7 +975,14 @@ filterKelasEl.addEventListener("change", () => {
 filterSiswaEl.addEventListener("change", () => { renderTableAbsensi(); renderTablePelanggaran(); renderAbsensiChart(); renderPelanggaranChart(); });
 filterTanggalMulai.addEventListener("change", () => { renderTableAbsensi(); renderTablePelanggaran(); renderAbsensiChart(); renderPelanggaranChart(); });
 filterTanggalAkhir.addEventListener("change", () => { renderTableAbsensi(); renderTablePelanggaran(); renderAbsensiChart(); renderPelanggaranChart(); });
-inputCari.addEventListener("input", () => { renderTableAbsensi(); renderTablePelanggaran(); renderAbsensiChart(); renderPelanggaranChart(); });
+inputCari.addEventListener("input", () => {
+  renderTableAbsensi();
+  renderTablePelanggaran();
+  renderAbsensiChart();
+  renderPelanggaranChart();
+  // Juga render catatan jika sedang di view catatan
+  if (currentView === 'catatan') renderTableCatatan();
+});
 btnRefresh.addEventListener("click", () => { renderTableAbsensi(); renderTablePelanggaran(); renderAbsensiChart(); renderPelanggaranChart(); });
 btnExportExcel.addEventListener("click", exportExcelCurrent);
 btnExportPDF.addEventListener("click", exportPDFCurrent);

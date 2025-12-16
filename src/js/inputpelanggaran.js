@@ -36,6 +36,7 @@ const btnNext = document.getElementById('btnNextDoc');
 let itemsPerPage = 10;
 let currentPage = 1;
 let allRecords = []; // Store all fetched records for client-side pagination
+let isEditingId = null; // Track editing state
 
 // Utility: dynamic script loader
 function loadScript(url) {

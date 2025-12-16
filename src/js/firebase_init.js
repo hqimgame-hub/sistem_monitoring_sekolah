@@ -39,12 +39,12 @@ import {
 
 // Firebase config (your project)
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID
+  apiKey: "AIzaSyAXg6GUd0Aw1Ku0DmWKN0VNGgrbluO26i8",
+  authDomain: "sistem-sekolah-6a1d5.firebaseapp.com",
+  projectId: "sistem-sekolah-6a1d5",
+  storageBucket: "sistem-sekolah-6a1d5.firebasestorage.app",
+  messagingSenderId: "152901594945",
+  appId: "1:152901594945:web:a672dd14fe231a89bebbc0"
 };
 
 // Logika PENTING untuk mencegah duplikasi inisialisasi

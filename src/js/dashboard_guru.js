@@ -243,8 +243,13 @@ async function initPelanggaranModule() {
     if (!kelas) return;
 
     const snap = await getDocs(query(collection(db, 'siswa'), where('kelas', '==', kelas)));
-    snap.forEach(d => {
-      siswaSel.appendChild(new Option(d.data().nama, d.id)); // VALUE = ID SISWA
+
+    // Sortir alfabetis
+    const students = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    students.sort((a, b) => (a.nama || "").localeCompare(b.nama || ""));
+
+    students.forEach(s => {
+      siswaSel.appendChild(new Option(s.nama, s.id)); // VALUE = ID SISWA
     });
   });
 
@@ -259,8 +264,13 @@ async function initPelanggaranModule() {
     }
 
     const snap = await getDocs(query(collection(db, 'siswa'), where('kelas', '==', kelas)));
-    snap.forEach(d => {
-      filterSiswaSel.appendChild(new Option(d.data().nama, d.id));
+
+    // Sortir alfabetis
+    const students = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    students.sort((a, b) => (a.nama || "").localeCompare(b.nama || ""));
+
+    students.forEach(s => {
+      filterSiswaSel.appendChild(new Option(s.nama, s.id));
     });
 
     loadCatatanPelanggaran();
@@ -1420,92 +1430,81 @@ async function loadRekapPelanggaran() {
 
 // ketika kelas dipilih → muat siswa
 // ===== Guarded listeners untuk modul pelanggaran (menghindari ReferenceError) =====
-(function safePelanggaranListeners() {
-  const kelasSel = document.getElementById('kelasPelanggaran');
-  const siswaSel = document.getElementById('namaSiswaPelanggaran');
-  const filterKelasSel = document.getElementById('filterKelasPelanggaran');
-  const filterSiswaSel = document.getElementById('filterSiswaPelanggaran');
+// formPelanggaran submit — pasang listener jika belum terpasang
+const formP = document.getElementById('formPelanggaran');
+if (formP) {
+  // Clone node untuk menghapus listener lama agar tidak double (atau gunakan flag)
+  const newForm = formP.cloneNode(true);
+  formP.parentNode.replaceChild(newForm, formP);
 
-  // NOTE: Event listener untuk kelasPelanggaran sudah ada di initPelanggaranModule()
-  // Tidak perlu duplikat di sini!
+  newForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    try {
+      // Ambil elemen & nilai
+      const kelas = document.getElementById('kelasPelanggaran')?.value || '';
+      const siswaSelect = document.getElementById('namaSiswaPelanggaran');
+      const siswaValue = siswaSelect?.value || '';
+      const jenis = document.getElementById('jenisPelanggaran')?.value || '';
+      const poin = Number(document.getElementById('poinPelanggaran')?.value || 0);
+      const keterangan = document.getElementById('keteranganPelanggaran')?.value || '';
 
-  // formPelanggaran submit — hanya pasang jika form ada dan elemen yang dibutuhkan ada
-  // Ganti listener submit lama dengan blok ini
-  const formP = document.getElementById('formPelanggaran');
-  if (formP) {
-    formP.addEventListener('submit', async (e) => {
-      e.preventDefault();
+      if (!kelas || !siswaValue || !jenis) return alert('Lengkapi semua kolom!');
+
+      // Tentukan siswaId dan namaSiswa
+      let siswaId = siswaValue;
+      let namaSiswa = siswaSelect?.selectedOptions?.[0]?.textContent || siswaValue;
+
+      // Coba treat siswaValue sebagai doc id
       try {
-        // Ambil elemen & nilai
-        const kelas = document.getElementById('kelasPelanggaran')?.value || '';
-        const siswaSelect = document.getElementById('namaSiswaPelanggaran');
-        const siswaValue = siswaSelect?.value || '';   // bisa jadi ID atau nama tergantung bagaimana dropdown dibuat
-        const jenis = document.getElementById('jenisPelanggaran')?.value || '';
-        const poin = Number(document.getElementById('poinPelanggaran')?.value || 0);
-        const keterangan = document.getElementById('keteranganPelanggaran')?.value || '';
-
-        if (!kelas || !siswaValue || !jenis) return alert('Lengkapi semua kolom!');
-
-        // Tentukan siswaId dan namaSiswa dengan aman:
-        let siswaId = siswaValue;
-        let namaSiswa = siswaSelect?.selectedOptions?.[0]?.textContent || siswaValue;
-
-        // Coba treat siswaValue sebagai doc id dan ambil dokumen kalau ada
-        try {
-          const docRef = doc(db, 'siswa', siswaValue);
-          const docSnap = await getDoc(docRef);
-          if (docSnap.exists()) {
-            siswaId = docSnap.id;
-            namaSiswa = docSnap.data().nama || namaSiswa;
-          }
-        } catch (errFetch) {
-          // jika fetch gagal atau siswaValue bukan id, kita tetap lanjut menggunakan nama yang ada
-          console.warn('Cek siswa sebagai doc id gagal (mungkin value bukan id):', errFetch);
+        const docRef = doc(db, 'siswa', siswaValue);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          siswaId = docSnap.id;
+          namaSiswa = docSnap.data().nama || namaSiswa;
         }
-
-        // Ambil kategori otomatis dari jenis_pelanggaran (jika ada)
-        let kategori = '';
-        try {
-          const snapJenis = await getDocs(collection(db, 'jenis_pelanggaran'));
-          snapJenis.forEach(j => {
-            const jd = j.data();
-            const namaJenis = jd.nama || jd.jenis || '';
-            if (namaJenis === jenis) {
-              kategori = jd.kategori || '';
-            }
-          });
-        } catch (errJ) {
-          console.warn('Gagal ambil kategori jenis_pelanggaran:', errJ);
-        }
-
-        // Siapkan objek dokumen sesuai format sinkron
-        const docObj = {
-          siswaId,
-          namaSiswa,
-          kelas,
-          jenis,
-          kategori,
-          poin,
-          keterangan,
-          createdAt: new Date().toISOString().slice(0, 10),
-          uidGuru: currentUser?.uid || '',
-          namaGuru: window.guruData?.nama || currentUser?.email || ''
-        };
-
-        // Simpan ke koleksi 'pelanggaran'
-        await addDoc(collection(db, 'pelanggaran'), docObj);
-
-        alert('✅ Data pelanggaran tersimpan dan akan tampil di dashboard Kepsek.');
-        formP.reset();
-        // reload rekap
-        loadCatatanPelanggaran();
-      } catch (err) {
-        console.error('Gagal menyimpan pelanggaran:', err);
-        alert('Gagal menyimpan pelanggaran. Periksa console untuk detail.');
+      } catch (errFetch) {
+        console.warn('Cek siswa sebagai doc id gagal:', errFetch);
       }
-    });
-  }
-})();
+
+      // Ambil kategori otomatis
+      let kategori = '';
+      try {
+        const snapJenis = await getDocs(collection(db, 'jenis_pelanggaran'));
+        snapJenis.forEach(j => {
+          const jd = j.data();
+          const namaJenis = jd.nama || jd.jenis || '';
+          if (namaJenis === jenis) {
+            kategori = jd.kategori || '';
+          }
+        });
+      } catch (errJ) {
+        console.warn('Gagal ambil kategori jenis_pelanggaran:', errJ);
+      }
+
+      const docObj = {
+        siswaId,
+        namaSiswa,
+        kelas,
+        jenis,
+        kategori,
+        poin,
+        keterangan,
+        createdAt: new Date().toISOString().slice(0, 10),
+        uidGuru: currentUser?.uid || '',
+        namaGuru: window.guruData?.nama || currentUser?.email || ''
+      };
+
+      await addDoc(collection(db, 'pelanggaran'), docObj);
+
+      alert('✅ Data pelanggaran tersimpan.');
+      newForm.reset();
+      loadCatatanPelanggaran();
+    } catch (err) {
+      console.error('Gagal menyimpan pelanggaran:', err);
+      alert('Gagal menyimpan pelanggaran: ' + err.message);
+    }
+  });
+}
 
 
 
@@ -1516,8 +1515,15 @@ async function loadCatatanPelanggaran() {
   const kelasF = document.getElementById('filterKelasPelanggaran')?.value || '';
   const siswaF = document.getElementById('filterSiswaPelanggaran')?.value || '';
 
+  // Fetch all but filter later (or use where clause if index exists)
+  // Karena index mungkin belum ada, filter client side untuk amannya
   const snap = await getDocs(collection(db, 'pelanggaran'));
   let allData = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+  // 🔒 Filter hanya data milik GURU ini
+  if (currentUser && window.guruData?.role === 'guru') {
+    allData = allData.filter(d => d.uidGuru === currentUser.uid);
+  }
 
   if (kelasF) allData = allData.filter(x => x.kelas === kelasF);
   if (siswaF) allData = allData.filter(x => x.siswaId === siswaF);
